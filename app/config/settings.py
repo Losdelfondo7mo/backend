@@ -1,4 +1,5 @@
-from pydantic import BaseSettings
+# Remove the old import and keep only this one
+from pydantic_settings import BaseSettings
 from typing import List
 
 class Settings(BaseSettings):
