@@ -1,1 +1,0 @@
-APP_PASSWORD = 'ykhj uzeu yztv pmfe'
