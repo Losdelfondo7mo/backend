@@ -1,0 +1,51 @@
+# Archivos de Python
+*.py[cod]
+__pycache__/
+*$py.class
+
+# Archivos de desarrollo
+.env
+.env.*
+.vscode/
+*.log
+*.tmp
+
+# Dependencias
+venv/
+env/
+ENV/
+
+# Sistema de archivos
+.DS_Store
+Thumbs.db
+
+# IDEs y editores
+.idea/
+*.swp
+*.swo
+*.swn
+
+# Archivos de sistema operativo
+*.lock
+package-lock.json
+
+# Archivos específicos de FastAPI
+fastapi_app/__pycache__/
+tests/__pycache__/
+
+# Documentación
+docs/_build/
+
+# Configuraciones adicionales
+.gitattributes
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+usuarios.db
+users.db
+api.txt
+
+/node_modules
+/lib
