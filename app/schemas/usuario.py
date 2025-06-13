@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 
 class UsuarioBase(BaseModel):
@@ -17,5 +17,7 @@ class UsuarioVerificar(BaseModel):
 class Usuario(UsuarioBase):
     id: int
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+    # Eliminar esta clase Config
+    # class Config:
+    #     orm_mode = True

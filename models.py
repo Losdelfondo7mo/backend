@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, Float
 from sqlalchemy.orm import declarative_base
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -44,6 +44,7 @@ class User(BaseModel):
 
 class UserInDB(User):
     hashed_password: str
+    model_config = ConfigDict(from_attributes=True)
 
 class UsuarioCrear(BaseModel):
     nombre: str
@@ -57,20 +58,21 @@ class UsuarioVerificar(BaseModel):
 
 class ProductoCrear(BaseModel):
     nombre: str
-    descripcion: Optional[str] = None
+    descripcion: str | None = None
     precio: float
     stock: int
-    imagen_url: Optional[str] = None
-    categoria: Optional[str] = None
+    imagen_url: str | None = None
+    categoria: str | None = None
 
 class ProductoMostrar(BaseModel):
     id: int
     nombre: str
-    descripcion: Optional[str]
+    descripcion: str | None
     precio: float
     stock: int
-    imagen_url: Optional[str]
-    categoria: Optional[str]
+    imagen_url: str | None
+    categoria: str | None
 
+    model_config = ConfigDict(from_attributes=True)
     class Config:
         orm_mode = True
