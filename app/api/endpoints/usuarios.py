@@ -70,3 +70,4 @@ async def verificar_usuario(usuario: str, db: Session = Depends(get_db)):
         "nombre": f"{usuario_existente.nombre} {usuario_existente.apellido}",
         "email": usuario_existente.email
     }
+    

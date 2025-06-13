@@ -2,7 +2,7 @@
 APP_PASSWORD = 'ykhj uzeu yztv pmfe'
 
 # Configuración de base de datos
-DATABASE_URL = "mysql+mysqlconnector://root:1234@localhost/mydb"
+DATABASE_URL = "postgresql://postgres:gordo@localhost:5432/myDB"
 
 # Configuración de JWT
 SECRET_KEY = "c67d978e20f38a9a00db5e4e60de978d93e0e3031b18e6c248e928bd3b9fad5b"

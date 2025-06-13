@@ -13,17 +13,19 @@ class Settings(BaseSettings):
     recipients: List[str] = ['losdelfondo7moetp@gmail.com', 'noahchamo@gmail.com']
     
     # Configuración de base de datos
-    database_url: str = "mysql+mysqlconnector://root:1234@localhost/mydb"
+    database_url: str = "postgresql://postgres:gordo@localhost:5432/myDB"
     
     # Configuración de JWT
     secret_key: str = "c67d978e20f38a9a00db5e4e60de978d93e0e3031b18e6c248e928bd3b9fad5b"
     algorithm: str = "HS256"
+    
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8"
+    }
     access_token_expire_minutes: int = 30
     
     # Scopes para Gmail API
     gmail_scopes: List[str] = ["https://www.googleapis.com/auth/gmail.send"]
-    
-    class Config:
-        env_file = ".env"
 
 settings = Settings()
