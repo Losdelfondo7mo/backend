@@ -1,4 +1,3 @@
-# Remove the old import and keep only this one
 from pydantic_settings import BaseSettings
 from typing import List
 
@@ -13,7 +12,7 @@ class Settings(BaseSettings):
     recipients: List[str] = ['losdelfondo7moetp@gmail.com', 'noahchamo@gmail.com']
     
     # Configuración de base de datos
-    database_url: str = "postgresql://postgres:gordo@localhost:5432/myDB"
+    database_url: str = "postgresql://losdelfondosql_user:PvDDXaQUDSmRWaa4yL3Fq2zC1BkmRtAn@dpg-d16b2kumcj7s73bv3peg-a.oregon-postgres.render.com:5432/losdelfondosql?client_encoding=utf8"
     
     # Configuración de JWT
     secret_key: str = "c67d978e20f38a9a00db5e4e60de978d93e0e3031b18e6c248e928bd3b9fad5b"

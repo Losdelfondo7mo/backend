@@ -2,13 +2,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.db.base import UsuarioModel, Producto  # Importar modelos para crear tablas
-from app.db.session import engine
 from sqlalchemy.ext.declarative import declarative_base
+import logging
 
 Base = declarative_base()
 
-# Crear tablas en la base de datos
-Base.metadata.create_all(bind=engine)
+# Intentar crear tablas en la base de datos
+try:
+    from app.db.session import engine
+    Base.metadata.create_all(bind=engine)
+    logging.info("Database tables created successfully")
+except Exception as e:
+    logging.warning(f"Could not create database tables: {e}")
+    logging.warning("Server will start without database connection")
 
 app = FastAPI(title="API Olimpiadas", version="1.0.0")
 
