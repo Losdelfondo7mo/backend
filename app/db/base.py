@@ -1,3 +1,4 @@
-# Importar todos los modelos para que Alembic los detecte
-from app.models.usuario import UsuarioModel
-from app.models.producto import Producto
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
+
