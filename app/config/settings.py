@@ -15,8 +15,9 @@ class Settings(BaseSettings):
     database_url: str = "postgresql://losdelfondosql_user:PvDDXaQUDSmRWaa4yL3Fq2zC1BkmRtAn@dpg-d16b2kumcj7s73bv3peg-a.oregon-postgres.render.com:5432/losdelfondosql?client_encoding=utf8"
     
     # Configuración de JWT
-    secret_key: str = "c67d978e20f38a9a00db5e4e60de978d93e0e3031b18e6c248e928bd3b9fad5b"
-    algorithm: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30 # por ejemplo, 30 minutos
+    SECRET_KEY: str = "tu_super_secreto_aqui" # Asegúrate de que esta también exista y sea segura
+    ALGORITHM: str = "HS256" # Asegúrate de que esta también exista
     
     model_config = {
         "env_file": ".env",
