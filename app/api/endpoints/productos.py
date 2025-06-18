@@ -2,51 +2,118 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.db.session import get_db
-from app.models.producto import Producto
-from app.schemas.producto import ProductoCrear, ProductoMostrar
+from app.db.session import get_db # Dependencia para obtener la sesión de la base de datos.
+from app.models.producto import Producto # Modelo SQLAlchemy para la tabla de productos.
+from app.schemas.producto import ProductoCrear, ProductoMostrar # Esquemas Pydantic para la validación y serialización de datos de productos.
+from app.core.security import get_current_active_user # Dependencia para obtener el usuario autenticado y activo.
+from app.models.usuario import UsuarioModel # Modelo de Usuario, usado aquí para el tipado del usuario actual.
 
-router = APIRouter()
+router = APIRouter() # Crea un router para los endpoints relacionados con productos.
 
-@router.post("/", response_model=ProductoMostrar, status_code=201)
-def crear_producto(producto: ProductoCrear, db: Session = Depends(get_db)):
-    nuevo_producto = Producto(**producto.dict())
-    db.add(nuevo_producto)
-    db.commit()
-    db.refresh(nuevo_producto)
+@router.post("/", response_model=ProductoMostrar, status_code=201) # HTTP 201 para creación exitosa.
+def crear_producto(producto: ProductoCrear, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_active_user)):
+    """
+    Crea un nuevo producto en la base de datos.
+    Este endpoint requiere que el usuario esté autenticado.
+    
+    Parámetros:
+        producto (ProductoCrear): Datos del producto a crear, validados por Pydantic.
+        db (Session): Sesión de SQLAlchemy para la base de datos.
+        current_user (UsuarioModel): El usuario autenticado que realiza la solicitud.
+        
+    Retorna:
+        ProductoMostrar: El producto recién creado, serializado según el esquema.
+    """
+    # El objeto 'current_user' contiene la información del usuario que ha iniciado sesión.
+    # Podría usarse, por ejemplo, para registrar quién creó el producto.
+    nuevo_producto = Producto(**producto.model_dump()) # Crea una instancia del modelo Producto con los datos del esquema.
+    db.add(nuevo_producto) # Añade el nuevo producto a la sesión.
+    db.commit() # Confirma los cambios en la base de datos.
+    db.refresh(nuevo_producto) # Refresca la instancia para obtener datos generados por la BD (como el ID).
     return nuevo_producto
 
 @router.get("/", response_model=List[ProductoMostrar])
 def listar_productos(db: Session = Depends(get_db)):
-    productos = db.query(Producto).all()
+    """
+    Recupera una lista de todos los productos disponibles.
+
+    Parámetros:
+        db (Session): Sesión de SQLAlchemy para la base de datos.
+
+    Retorna:
+        List[ProductoMostrar]: Una lista de productos.
+    """
+    productos = db.query(Producto).all() # Consulta todos los registros de la tabla de productos.
     return productos
 
 @router.get("/{producto_id}", response_model=ProductoMostrar)
 def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
-    producto = db.query(Producto).filter(Producto.id == producto_id).first()
+    """
+    Obtiene los detalles de un producto específico mediante su ID.
+
+    Parámetros:
+        producto_id (int): El ID del producto a buscar.
+        db (Session): Sesión de SQLAlchemy para la base de datos.
+
+    Excepciones:
+        HTTPException (404): Si no se encuentra ningún producto con el ID proporcionado.
+
+    Retorna:
+        ProductoMostrar: Los detalles del producto encontrado.
+    """
+    producto = db.query(Producto).filter(Producto.id == producto_id).first() # Busca el producto por su ID.
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return producto
 
 @router.put("/{producto_id}", response_model=ProductoMostrar)
-def actualizar_producto(producto_id: int, producto_actualizado: ProductoCrear, db: Session = Depends(get_db)):
+def actualizar_producto(producto_id: int, producto_actualizado: ProductoCrear, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_active_user)):
+    """
+    Actualiza la información de un producto existente, identificado por su ID.
+    Requiere autenticación.
+
+    Parámetros:
+        producto_id (int): El ID del producto a actualizar.
+        producto_actualizado (ProductoCrear): Los nuevos datos para el producto.
+        db (Session): Sesión de SQLAlchemy para la base de datos.
+        current_user (UsuarioModel): El usuario autenticado.
+
+    Excepciones:
+        HTTPException (404): Si el producto no se encuentra.
+
+    Retorna:
+        ProductoMostrar: El producto con la información actualizada.
+    """
     producto = db.query(Producto).filter(Producto.id == producto_id).first()
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     
-    for key, value in producto_actualizado.dict().items():
+    # Itera sobre los datos del producto actualizado y los asigna al modelo existente.
+    for key, value in producto_actualizado.model_dump().items():
         setattr(producto, key, value)
     
-    db.commit()
-    db.refresh(producto)
+    db.commit() # Guarda los cambios en la base de datos.
+    db.refresh(producto) # Refresca la instancia del producto.
     return producto
 
-@router.delete("/{producto_id}", status_code=204)
-def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
+@router.delete("/{producto_id}", status_code=204) # HTTP 204 indica éxito sin contenido de respuesta.
+def eliminar_producto(producto_id: int, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_active_user)):
+    """
+    Elimina un producto de la base de datos utilizando su ID.
+    Requiere autenticación.
+
+    Parámetros:
+        producto_id (int): El ID del producto a eliminar.
+        db (Session): Sesión de SQLAlchemy para la base de datos.
+        current_user (UsuarioModel): El usuario autenticado.
+
+    Excepciones:
+        HTTPException (404): Si el producto no se encuentra.
+    """
     producto = db.query(Producto).filter(Producto.id == producto_id).first()
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     
-    db.delete(producto)
-    db.commit()
-    return
+    db.delete(producto) # Elimina el producto de la sesión.
+    db.commit() # Confirma la eliminación en la base de datos.
+    return # No se devuelve contenido con el código de estado 204.
