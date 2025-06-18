@@ -28,7 +28,6 @@ origins = [
     "http://localhost:4200",  # Común para desarrollo local con Angular.
     "http://localhost:3000",  # Común para desarrollo local con React.
     "http://localhost:8080",  # Otro puerto común para desarrollo frontend.
-    # "https://tu-dominio-frontend-en-produccion.com", # ¡IMPORTANTE! Añade tu dominio de frontend en producción.
 ]
 
 app.add_middleware(
