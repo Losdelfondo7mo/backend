@@ -10,10 +10,8 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from config import APP_PASSWORD, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SENDER_EMAIL, GMAIL_SCOPES
 
-# --- Configuración de seguridad ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# --- Funciones de autenticación ---
 def verificar_contraseña(contraseña_plana: str, contraseña_hash: str):
     return pwd_context.verify(contraseña_plana, contraseña_hash)
 
@@ -30,7 +28,6 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# --- Funciones de correo electrónico ---
 def obtener_mensaje_registro(username):
     subject = '¡Bienvenid@! Registro Exitoso'
     body = f'''
@@ -70,7 +67,6 @@ def obtener_mensaje_compra(username, product, order_id):
     return subject, body
 
 def send_email_smtp(recipients, subject, body):
-    """Envía correo usando SMTP"""
     try:
         msg = MIMEMultipart()
         msg['From'] = SENDER_EMAIL
@@ -92,7 +88,6 @@ def send_email_smtp(recipients, subject, body):
         return False
 
 def send_email_gmail_api(to_email, subject, body):
-    """Envía correo usando Gmail API"""
     try:
         flow = InstalledAppFlow.from_client_secrets_file("credentials.json", GMAIL_SCOPES)
         creds = flow.run_local_server(port=0)

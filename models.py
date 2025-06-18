@@ -6,7 +6,6 @@ from datetime import datetime
 
 Base = declarative_base()
 
-# --- Modelos SQLAlchemy (Base de datos) ---
 class UsuarioModel(Base):
     __tablename__ = "usuarios"
     
@@ -27,7 +26,6 @@ class Producto(Base):
     imagen_url = Column(String(255))
     categoria = Column(String(10))
 
-# --- Modelos Pydantic (Validación y serialización) ---
 class Token(BaseModel):
     access_token: str
     token_type: str
