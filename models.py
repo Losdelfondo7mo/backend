@@ -48,6 +48,13 @@ class UsuarioLogin(BaseModel):
     usuario: str
     contraseña: str
 
+class UsuarioCrear(BaseModel):
+    nombre: str
+    apellido: str
+    email: EmailStr
+    usuario: str
+    contraseña: str
+
 class UsuarioVerificar(BaseModel):
     usuario: str
 
