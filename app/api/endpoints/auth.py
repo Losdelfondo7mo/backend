@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
 
@@ -8,14 +7,15 @@ from app.models.usuario import UsuarioModel
 from app.core.security import verificar_contraseña, create_access_token
 from app.schemas.token import Token
 from app.config.settings import settings
+from models import UsuarioLogin
 
 router = APIRouter()
 
 @router.post("/login", response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    usuario_db = db.query(UsuarioModel).filter(UsuarioModel.usuario == form_data.username).first()
+async def login_for_access_token(login_data: UsuarioLogin, db: Session = Depends(get_db)):
+    usuario_db = db.query(UsuarioModel).filter(UsuarioModel.usuario == login_data.usuario).first()
     
-    if not usuario_db or not verificar_contraseña(form_data.password, usuario_db.contraseña_hash):
+    if not usuario_db or not verificar_contraseña(login_data.contraseña, usuario_db.contraseña_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Nombre de usuario o contraseña incorrectos.",

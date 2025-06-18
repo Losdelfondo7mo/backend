@@ -44,10 +44,7 @@ class UserInDB(User):
     hashed_password: str
     model_config = ConfigDict(from_attributes=True)
 
-class UsuarioCrear(BaseModel):
-    nombre: str
-    apellido: str
-    email: EmailStr
+class UsuarioLogin(BaseModel):
     usuario: str
     contraseña: str
 
