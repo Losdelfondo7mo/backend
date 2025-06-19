@@ -11,28 +11,6 @@ from app.models.usuario import UsuarioModel # Modelo de Usuario, usado aquí par
 
 router = APIRouter() # Crea un router para los endpoints relacionados con productos.
 
-@router.post("/", response_model=ProductoMostrar, status_code=201) # HTTP 201 para creación exitosa.
-def crear_producto(producto: ProductoCrear, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_active_user)):
-    """
-    Crea un nuevo producto en la base de datos.
-    Este endpoint requiere que el usuario esté autenticado.
-    
-    Parámetros:
-        producto (ProductoCrear): Datos del producto a crear, validados por Pydantic.
-        db (Session): Sesión de SQLAlchemy para la base de datos.
-        current_user (UsuarioModel): El usuario autenticado que realiza la solicitud.
-        
-    Retorna:
-        ProductoMostrar: El producto recién creado, serializado según el esquema.
-    """
-    # El objeto 'current_user' contiene la información del usuario que ha iniciado sesión.
-    # Podría usarse, por ejemplo, para registrar quién creó el producto.
-    nuevo_producto = Producto(**producto.model_dump()) # Crea una instancia del modelo Producto con los datos del esquema.
-    db.add(nuevo_producto) # Añade el nuevo producto a la sesión de la base de datos.
-    db.commit() # Confirma los cambios en la base de datos.
-    db.refresh(nuevo_producto) # Actualiza el objeto con los datos generados por la base de datos (como el ID).
-    return nuevo_producto # Retorna el producto creado.
-
 # Nuevo endpoint específico para crear productos
 @router.post("/crear", response_model=ProductoMostrar, status_code=201)
 def crear_producto_endpoint(producto: ProductoCrear, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_active_user)):

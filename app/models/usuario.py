@@ -24,4 +24,4 @@ class UsuarioModel(Base):
     is_active = Column(Boolean, default=True)
     
     # Relaciones
-    ventas = relationship("Venta", back_populates="usuario")
+    pedidos = relationship("PedidoModel", back_populates="usuario")
