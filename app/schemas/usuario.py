@@ -22,23 +22,24 @@ class UsuarioBase(BaseModel):
 
 class UsuarioCrear(UsuarioBase):
     """
-    Esquema utilizado para la creación de un nuevo usuario REGULAR.
+    Esquema para la creación de un usuario.
     Hereda de `UsuarioBase` y añade el campo `contraseña`.
-    NO incluye el campo rol para mayor seguridad.
     """
-    contraseña: str # Contraseña en texto plano proporcionada al crear el usuario.
-
-class UsuarioPublic(UsuarioBase):
-    """
-    Esquema para mostrar la información pública de un usuario.
-    Hereda de `UsuarioBase` y añade el `id` y `rol`.
-    Crucialmente, NO incluye la contraseña ni su hash.
-    """
-    id: int # Identificador único del usuario.
-    rol: Optional[str] = "usuario" # Rol del usuario, por defecto 'usuario'
-
-    # Configuración para Pydantic v2. 'from_attributes=True' permite la creación
-    # del esquema a partir de un modelo ORM de SQLAlchemy.
+    email: EmailStr # El correo electrónico del usuario, validado como formato de email.
+    usuario: str    # El nombre de usuario para el login.
+    nombre: Optional[str] = None # Nombre real del usuario, opcional.
+    apellido: Optional[str] = None # Apellido del usuario, opcional.
+    contraseña: Optional[str] = None
+    
+class UsuarioPublic(BaseModel):
+    """Esquema para mostrar la información pública de un usuario."""
+    id: int
+    email: EmailStr
+    usuario: str
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    rol: Optional[str] = "usuario"
+    
     model_config = ConfigDict(from_attributes=True)
 
 class Usuario(UsuarioBase):

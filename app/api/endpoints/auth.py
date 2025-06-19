@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Form, Body, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
+from typing import Optional, Dict, Any
+from pydantic import ValidationError
 from app.db.session import get_db
 from app.models.usuario import UsuarioModel
 from app.core.security import verificar_contraseña, create_access_token, obtener_contraseña_hash
@@ -15,10 +17,60 @@ from typing import List
 import secrets
 
 router = APIRouter()
-
-@router.post("/crear", status_code=201, response_model=UsuarioPublic)
-async def crear_usuario(usuario: UsuarioCrear, db: Session = Depends(get_db)):
+@router.post("/register", status_code=201, response_model=UsuarioPublic)
+async def register_user(
+    request: Request,
+    db: Session = Depends(get_db),
+    username: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    password: Optional[str] = Form(None),
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None)
+):
+    """
+    Endpoint flexible que acepta tanto datos JSON como formulario.
+    """
     try:
+        # Intentar obtener datos del cuerpo JSON si no se proporcionaron en el formulario
+        if username is None and email is None and password is None:
+            # Si no hay datos de formulario, intentamos leer JSON
+            json_data = await request.json()
+            
+            # Mapear campos JSON a los nombres esperados por UsuarioCrear
+            usuario_data = {
+                "usuario": json_data.get("username") or json_data.get("usuario"),
+                "email": json_data.get("email"),
+                "contraseña": json_data.get("password") or json_data.get("contraseña"),
+                "nombre": json_data.get("first_name") or json_data.get("nombre"),
+                "apellido": json_data.get("last_name") or json_data.get("apellido")
+            }
+        else:
+            # Si hay datos de formulario, los usamos
+            usuario_data = {
+                "usuario": username,
+                "email": email,
+                "contraseña": password,
+                "nombre": first_name,
+                "apellido": last_name
+            }
+        
+        # Validar que los campos requeridos estén presentes
+        if not usuario_data["usuario"] or not usuario_data["email"] or not usuario_data["contraseña"]:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Se requieren los campos username/usuario, email y password/contraseña"
+            )
+        
+        # Crear objeto UsuarioCrear
+        try:
+            usuario = UsuarioCrear(**usuario_data)
+        except ValidationError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=str(e)
+            )
+        
+        # Lógica de creación de usuario (copiada de crear_usuario)
         if db.query(UsuarioModel).filter(UsuarioModel.usuario == usuario.usuario).first():
             raise HTTPException(status_code=400, detail="Este nombre de usuario ya está en uso.")
 
@@ -56,13 +108,46 @@ async def crear_usuario(usuario: UsuarioCrear, db: Session = Depends(get_db)):
         except Exception as email_exc:
             pass 
 
-        return nuevo_usuario 
+        return nuevo_usuario
     
     except HTTPException: 
         raise
-    except Exception as e: 
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
+    except Exception as e:
         db.rollback() 
-        raise HTTPException(status_code=500, detail="Ocurrió un error interno al procesar tu registro. Inténtalo más tarde.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al procesar la solicitud: {str(e)}"
+        )
+
+# Si quieres mantener compatibilidad con código existente, puedes añadir un alias
+@router.post("/crear", status_code=201, response_model=UsuarioPublic)
+async def crear_usuario(usuario: UsuarioCrear, db: Session = Depends(get_db)):
+    """
+    Endpoint de compatibilidad que redirige al nuevo endpoint /register
+    """
+    # Convertir a diccionario para pasar a register_user
+    usuario_dict = usuario.model_dump()
+    # Adaptar nombres de campos
+    request_data = {
+        "username": usuario_dict["usuario"],
+        "email": usuario_dict["email"],
+        "password": usuario_dict["contraseña"],
+        "first_name": usuario_dict["nombre"],
+        "last_name": usuario_dict["apellido"]
+    }
+    
+    # Crear un objeto Request simulado con los datos
+    class MockRequest:
+        async def json(self):
+            return request_data
+    
+    # Llamar al endpoint register_user
+    return await register_user(MockRequest(), db)
 
 @router.post("/login", response_model=Token)
 async def login_for_access_token(login_data: UsuarioLogin, db: Session = Depends(get_db)):
@@ -79,7 +164,32 @@ async def login_for_access_token(login_data: UsuarioLogin, db: Session = Depends
     access_token = create_access_token(
         data={"sub": usuario_db.usuario}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "usuario": usuario_db.usuario  # Añadido para que el frontend lo reciba
+    }
+
+@router.post("/token", response_model=Token)
+async def login_oauth(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    usuario_db = db.query(UsuarioModel).filter(UsuarioModel.usuario == form_data.username).first()
+    
+    if not usuario_db or not verificar_contraseña(form_data.password, usuario_db.contraseña_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales inválidas",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": usuario_db.usuario}, expires_delta=access_token_expires
+    )
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "usuario": usuario_db.usuario  # Añadido para que el frontend lo reciba
+    }
 
 @router.get("/oauth/providers", response_model=List[OAuthProvider])
 async def get_oauth_providers():
