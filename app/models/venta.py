@@ -1,7 +1,14 @@
-from sqlalchemy import Column, Integer, Float, DateTime, ForeignKey, String
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.base import Base
+import enum
+
+class EstadoPedido(enum.Enum):
+    PENDIENTE = "pendiente"
+    CONFIRMADO = "confirmado"
+    DENEGADO = "denegado"
+    ENTREGADO = "entregado"
 
 class Venta(Base):
     """
@@ -18,6 +25,9 @@ class Venta(Base):
     total = Column(Float, nullable=False)
     fecha_venta = Column(DateTime, default=datetime.utcnow, nullable=False)
     metodo_pago = Column(String(50), nullable=True)
+    estado = Column(Enum(EstadoPedido), default=EstadoPedido.PENDIENTE, nullable=False)
+    fecha_confirmacion = Column(DateTime, nullable=True)
+    fecha_entrega = Column(DateTime, nullable=True)
     
     # Relaciones
     producto = relationship("Producto", back_populates="ventas")

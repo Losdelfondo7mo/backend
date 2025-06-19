@@ -1,6 +1,13 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
+from enum import Enum
+
+class EstadoPedido(str, Enum):
+    PENDIENTE = "pendiente"
+    CONFIRMADO = "confirmado"
+    DENEGADO = "denegado"
+    ENTREGADO = "entregado"
 
 class VentaBase(BaseModel):
     """
@@ -25,9 +32,18 @@ class VentaMostrar(VentaBase):
     usuario_id: int
     total: float
     fecha_venta: datetime
+    estado: EstadoPedido
+    fecha_confirmacion: Optional[datetime] = None
+    fecha_entrega: Optional[datetime] = None
     
     model_config = ConfigDict(from_attributes=True)
 
+class PedidoConfirmar(BaseModel):
+    """
+    Esquema para confirmar o denegar un pedido.
+    """
+    confirmar: bool  # True para confirmar, False para denegar
+    
 class EstadisticasVentas(BaseModel):
     """
     Esquema para mostrar estadísticas de ventas.
