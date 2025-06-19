@@ -124,42 +124,53 @@ async def register_user(
             detail=f"Error al procesar la solicitud: {str(e)}"
         )
 
-# Si quieres mantener compatibilidad con código existente, puedes añadir un alias
 @router.post("/crear", status_code=201, response_model=UsuarioPublic)
 async def crear_usuario(
-    request: Request,
-    db: Session = Depends(get_db),
-    usuario_form: Optional[UsuarioCrear] = None,
-    username: Optional[str] = Form(None),
-    email: Optional[str] = Form(None),
-    password: Optional[str] = Form(None),
-    first_name: Optional[str] = Form(None),
-    last_name: Optional[str] = Form(None)
+    usuario: UsuarioCrear,
+    db: Session = Depends(get_db)
 ):
     """
-    Endpoint que acepta tanto JSON como datos de formulario
+    Endpoint que acepta solo datos en formato JSON
     """
-    # Si se proporcionó un objeto UsuarioCrear directamente (JSON)
-    if usuario_form:
-        return await register_user(MockRequest(usuario_form), db)
-    
-    # Si se proporcionaron datos de formulario
-    if username or email or password:
-        # Crear un objeto Request simulado
-        class MockRequest:
-            async def json(self):
-                return {
-                    "username": username,
-                    "email": email,
-                    "password": password,
-                    "first_name": first_name,
-                    "last_name": last_name
-                }
-        
-        return await register_user(MockRequest(), db)
-    
-    # Si no hay datos, intentar leer del cuerpo de la solicitud
-    return await register_user(request, db)
+    # Lógica de creación de usuario
+    if db.query(UsuarioModel).filter(UsuarioModel.usuario == usuario.usuario).first():
+        raise HTTPException(status_code=400, detail="Este nombre de usuario ya está en uso.")
+
+    if db.query(UsuarioModel).filter(UsuarioModel.email == usuario.email).first():
+        raise HTTPException(status_code=400, detail="Este correo electrónico ya está registrado.")
+
+    nuevo_usuario = UsuarioModel(
+        nombre=usuario.nombre,
+        apellido=usuario.apellido,
+        email=usuario.email,
+        usuario=usuario.usuario,
+        contraseña_hash=obtener_contraseña_hash(usuario.contraseña),
+        rol="usuario"  # Forzar rol como 'usuario' para mayor seguridad
+    )
+
+    db.add(nuevo_usuario)
+    db.commit()
+    db.refresh(nuevo_usuario)
+
+    subject = "¡Bienvenid@ a Nuestra Plataforma!"
+    body = f"""
+    <html>
+    <body>
+        <h2>¡Hola, {usuario.usuario}!</h2>
+        <p>Te damos la bienvenida. Tu cuenta ha sido creada con éxito.</p>
+        <p>¡Esperamos que disfrutes de nuestros servicios!</p>
+        <br>
+        <p>Atentamente,</p>
+        <p>El Equipo de la Plataforma</p>
+    </body>
+    </html>
+    """
+    try:
+        send_email_smtp([usuario.email], subject, body)
+    except Exception as email_exc:
+        pass 
+
+    return nuevo_usuario
 
 @router.post("/login", response_model=Token)
 async def login_for_access_token(login_data: UsuarioLogin, db: Session = Depends(get_db)):
