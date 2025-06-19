@@ -254,5 +254,17 @@ async def eliminar_administrador(usuario_id: int, db: Session = Depends(get_db))
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail="Error al procesar la solicitud.")
+
+@router.get("/all", response_model=list[UsuarioPublic])
+async def listar_usuarios(db: Session = Depends(get_db)):
+    """
+    Endpoint para listar todos los usuarios registrados en la base de datos.
+    """
+    try:
+        usuarios = db.query(UsuarioModel).all()
+        return usuarios
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Error al obtener la lista de usuarios.")
     
     
