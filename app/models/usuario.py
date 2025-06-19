@@ -11,20 +11,17 @@ class UsuarioModel(Base):
     apellido = Column(String(50), nullable=False)
     email = Column(String(100), unique=True, nullable=False, index=True)
     usuario = Column(String(50), unique=True, nullable=False, index=True)
-    contraseña_hash = Column(String, nullable=True)  # Hacer nullable para usuarios OAuth
+    contraseña_hash = Column(String, nullable=True)
     rol = Column(String(20), nullable=False, default="usuario")
     
-    # Campos para OAuth
-    oauth_provider = Column(String(50), nullable=True)  # 'google', 'github', 'discord'
-    oauth_id = Column(String(100), nullable=True)  # ID del usuario en el proveedor OAuth
-    avatar_url = Column(Text, nullable=True)  # URL del avatar del usuario
+    # Campos OAuth
+    oauth_provider = Column(String(50), nullable=True)
+    oauth_id = Column(String(100), nullable=True)
+    avatar_url = Column(Text, nullable=True)
     
+    # Campos de auditoría
     created_at = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
     
+    # Relaciones
     ventas = relationship("Venta", back_populates="usuario")
-    
-    # Nuevos campos OAuth
-    oauth_provider = Column(String, nullable=True)  # 'google', 'github', 'discord', etc.
-    oauth_id = Column(String, nullable=True)  # ID del usuario en el proveedor OAuth
-    avatar_url = Column(Text, nullable=True)  # URL del avatar del usuario
