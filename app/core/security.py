@@ -14,7 +14,7 @@ from app.db.session import get_db # Dependencia para obtener la sesión de la ba
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Define el esquema OAuth2 para la obtención de tokens. 'tokenUrl' debe apuntar al endpoint de login.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
 def verificar_contraseña(contraseña_plana: str, contraseña_hash: str) -> bool:
     """
