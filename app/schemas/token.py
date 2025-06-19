@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 class Token(BaseModel):
@@ -17,3 +17,17 @@ class TokenData(BaseModel):
     Utilizado para validar y extraer la información del sujeto (username) del token.
     """
     username: Optional[str] = None # El nombre de usuario (subject 'sub') extraído del token. Es opcional en la definición.
+
+class TokenWithUserData(BaseModel):
+    """
+    Esquema para la respuesta del token de acceso JWT con datos del usuario.
+    Incluye el token, su tipo, y datos básicos del usuario sin información sensible.
+    """
+    access_token: str
+    token_type: str
+    usuario: str
+    rol: str
+    email: Optional[EmailStr] = None
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    id: Optional[int] = None
