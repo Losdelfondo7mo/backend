@@ -8,6 +8,7 @@ class Token(BaseModel):
     """
     access_token: str # El token JWT.
     token_type: str   # Tipo de token, comúnmente "bearer".
+    usuario: Optional[str] = None  # Nombre de usuario para el frontend
 
 class TokenData(BaseModel):
     """
