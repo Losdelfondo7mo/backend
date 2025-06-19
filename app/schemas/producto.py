@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional # Para campos opcionales.
+from datetime import datetime
 
 class ProductoBase(BaseModel):
     """
@@ -9,9 +10,9 @@ class ProductoBase(BaseModel):
     nombre: str
     descripcion: Optional[str] = None # La descripción es opcional.
     precio: float
-    stock: int
     imagen_url: Optional[str] = None # La URL de la imagen es opcional.
     categoria: Optional[str] = None # La categoría es opcional.
+    fecha: Optional[datetime] = None # La fecha es opcional.
 
 class ProductoCrear(ProductoBase):
     """

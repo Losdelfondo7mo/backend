@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Text, Float
+from sqlalchemy import Column, Integer, String, Text, Float, DateTime
 from sqlalchemy.orm import relationship
 from app.db.base import Base
+from datetime import datetime
 
 class Producto(Base):
     """
@@ -13,9 +14,9 @@ class Producto(Base):
     nombre = Column(String(100), nullable=False)
     descripcion = Column(Text, nullable=True)
     precio = Column(Float, nullable=False)
-    stock = Column(Integer, nullable=False)
     imagen_url = Column(String(255), nullable=True)
     categoria = Column(String(50), nullable=True)
+    fecha = Column(DateTime, default=datetime.utcnow, nullable=True)
     
     # Relación con ventas
     ventas = relationship("Venta", back_populates="producto")

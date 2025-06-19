@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime
 
 from app.db.session import get_db # Dependencia para obtener la sesión de la base de datos.
 from app.models.producto import Producto # Modelo SQLAlchemy para la tabla de productos.
@@ -27,9 +28,22 @@ def crear_producto(producto: ProductoCrear, db: Session = Depends(get_db), curre
     # El objeto 'current_user' contiene la información del usuario que ha iniciado sesión.
     # Podría usarse, por ejemplo, para registrar quién creó el producto.
     nuevo_producto = Producto(**producto.model_dump()) # Crea una instancia del modelo Producto con los datos del esquema.
-    db.add(nuevo_producto) # Añade el nuevo producto a la sesión.
+    db.add(nuevo_producto) # Añade el nuevo producto a la sesión de la base de datos.
     db.commit() # Confirma los cambios en la base de datos.
-    db.refresh(nuevo_producto) # Refresca la instancia para obtener datos generados por la BD (como el ID).
+    db.refresh(nuevo_producto) # Actualiza el objeto con los datos generados por la base de datos (como el ID).
+    return nuevo_producto # Retorna el producto creado.
+
+# Nuevo endpoint específico para crear productos
+@router.post("/crear", response_model=ProductoMostrar, status_code=201)
+def crear_producto_endpoint(producto: ProductoCrear, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_active_user)):
+    """
+    Endpoint específico para crear un nuevo producto.
+    Funciona igual que el endpoint POST / pero con una ruta más explícita.
+    """
+    nuevo_producto = Producto(**producto.model_dump())
+    db.add(nuevo_producto)
+    db.commit()
+    db.refresh(nuevo_producto)
     return nuevo_producto
 
 @router.get("/", response_model=List[ProductoMostrar])
