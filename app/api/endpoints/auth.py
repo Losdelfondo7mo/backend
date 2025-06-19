@@ -126,28 +126,40 @@ async def register_user(
 
 # Si quieres mantener compatibilidad con código existente, puedes añadir un alias
 @router.post("/crear", status_code=201, response_model=UsuarioPublic)
-async def crear_usuario(usuario: UsuarioCrear, db: Session = Depends(get_db)):
+async def crear_usuario(
+    request: Request,
+    db: Session = Depends(get_db),
+    usuario_form: Optional[UsuarioCrear] = None,
+    username: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    password: Optional[str] = Form(None),
+    first_name: Optional[str] = Form(None),
+    last_name: Optional[str] = Form(None)
+):
     """
-    Endpoint de compatibilidad que redirige al nuevo endpoint /register
+    Endpoint que acepta tanto JSON como datos de formulario
     """
-    # Convertir a diccionario para pasar a register_user
-    usuario_dict = usuario.model_dump()
-    # Adaptar nombres de campos
-    request_data = {
-        "username": usuario_dict["usuario"],
-        "email": usuario_dict["email"],
-        "password": usuario_dict["contraseña"],
-        "first_name": usuario_dict["nombre"],
-        "last_name": usuario_dict["apellido"]
-    }
+    # Si se proporcionó un objeto UsuarioCrear directamente (JSON)
+    if usuario_form:
+        return await register_user(MockRequest(usuario_form), db)
     
-    # Crear un objeto Request simulado con los datos
-    class MockRequest:
-        async def json(self):
-            return request_data
+    # Si se proporcionaron datos de formulario
+    if username or email or password:
+        # Crear un objeto Request simulado
+        class MockRequest:
+            async def json(self):
+                return {
+                    "username": username,
+                    "email": email,
+                    "password": password,
+                    "first_name": first_name,
+                    "last_name": last_name
+                }
+        
+        return await register_user(MockRequest(), db)
     
-    # Llamar al endpoint register_user
-    return await register_user(MockRequest(), db)
+    # Si no hay datos, intentar leer del cuerpo de la solicitud
+    return await register_user(request, db)
 
 @router.post("/login", response_model=Token)
 async def login_for_access_token(login_data: UsuarioLogin, db: Session = Depends(get_db)):
