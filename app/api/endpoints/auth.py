@@ -190,7 +190,8 @@ async def login_for_access_token(login_data: UsuarioLogin, db: Session = Depends
     return {
         "access_token": access_token, 
         "token_type": "bearer",
-        "usuario": usuario_db.usuario  # Añadido para que el frontend lo reciba
+        "usuario": usuario_db.usuario,
+        "rol": usuario_db.rol,  # Añadido para que el frontend lo reciba
     }
 
 @router.post("/token", response_model=Token)
