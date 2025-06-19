@@ -18,6 +18,7 @@ class UsuarioBase(BaseModel):
     usuario: str    # El nombre de usuario para el login.
     nombre: Optional[str] = None # Nombre real del usuario, opcional.
     apellido: Optional[str] = None # Apellido del usuario, opcional.
+    contraseña: Optional[str] = None
 
 class UsuarioCrear(UsuarioBase):
     """
