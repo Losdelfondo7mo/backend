@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -8,7 +8,7 @@ from app.core.security import verificar_contraseña, create_access_token
 from app.services.oauth_service import oauth_service
 from app.schemas.oauth import OAuthCallback, OAuthLoginResponse, OAuthProvider
 from app.schemas.token import Token
-from app.schemas.usuario import UsuarioLogin
+from app.schemas.usuario import UsuarioLogin, UsuarioCrear, UsuarioPublic
 from app.config.settings import settings
 from typing import List
 import secrets
