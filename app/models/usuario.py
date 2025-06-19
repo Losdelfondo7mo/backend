@@ -14,3 +14,4 @@ class UsuarioModel(Base):
     email = Column(String(100), unique=True, nullable=False, index=True) # Correo electrónico del usuario, debe ser único y está indexado. Ajustado a 100 caracteres.
     usuario = Column(String(50), unique=True, nullable=False, index=True) # Nombre de usuario para login, debe ser único y está indexado. Ajustado a 50 caracteres.
     contraseña_hash = Column(String(255), nullable=False) # Hash de la contraseña del usuario. Longitud aumentada para hashes modernos.
+    rol = Column(String(20), nullable=False, default="usuario") # Rol del usuario: 'usuario' o 'administrador'

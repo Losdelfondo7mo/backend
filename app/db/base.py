@@ -1,4 +1,4 @@
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 # 'Base' es la clase fundamental de la cual todos los modelos ORM de SQLAlchemy heredarán.
 # Permite a SQLAlchemy mapear las clases Python a tablas de la base de datos.
