@@ -5,7 +5,7 @@ __pycache__/
 
 # Archivos de desarrollo
 .env
-.env.*
+*.env
 .vscode/
 *.log
 *.tmp
