@@ -147,7 +147,7 @@ async def registrar_visita(ip_address: str, user_agent: str = None, pagina_visit
         db.rollback()
         raise HTTPException(status_code=500, detail="Error al registrar la visita.")
 
-@router.post("/crear-admin", status_code=201, response_model=UsuarioPublic)
+@router.post("/crear-administrador", status_code=201, response_model=UsuarioPublic)
 async def crear_administrador(admin: AdminCrear, db: Session = Depends(get_db)):
     """
     Endpoint específico para crear un usuario administrador.
@@ -228,7 +228,7 @@ async def listar_administradores(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error al obtener la lista de administradores.")
 
-@router.delete("/admin/{usuario_id}", status_code=200)
+@router.delete("/administrador/{usuario_id}", status_code=200)
 async def eliminar_administrador(usuario_id: int, db: Session = Depends(get_db)):
     """
     Endpoint para eliminar un administrador (cambiar su rol a usuario regular).

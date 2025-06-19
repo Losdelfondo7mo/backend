@@ -129,7 +129,7 @@ async def get_current_active_user(current_user: UsuarioModel = Depends(get_curre
 async def get_current_admin_user(current_user: UsuarioModel = Depends(get_current_active_user)) -> UsuarioModel:
     """
     Dependencia para obtener el usuario actual que es administrador.
-    Verifica que el usuario tenga el rol de 'admin'.
+    Verifica que el usuario tenga el rol de 'administrador'.
 
     Parámetros:
         current_user (UsuarioModel): El usuario obtenido de la dependencia `get_current_active_user`.
@@ -140,8 +140,9 @@ async def get_current_admin_user(current_user: UsuarioModel = Depends(get_curren
     Retorna:
         UsuarioModel: El usuario administrador.
     """
-    if current_user.rol != "admin":
+    if current_user.rol != "administrador":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Se requieren privilegios de administrador para esta acción"
         )
+    return current_user
