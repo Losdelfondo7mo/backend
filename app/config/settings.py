@@ -7,27 +7,27 @@ class Settings(BaseSettings):
     app_version: str = "1.0.0"
     
     # --- Configuración del Servicio de Correo Electrónico ---
-    app_password: str  # Remove default, use env var
+    app_password: str  # Sin valor por defecto - debe venir de env
     sender_email: str = 'losdelfondo7moetp@gmail.com'
     recipients: List[str] = ['losdelfondo7moetp@gmail.com', 'noahchamo@gmail.com']
     
     # --- Configuración de la Base de Datos ---
-    database_url: str  # Remove default, use env var
+    database_url: str  # Sin valor por defecto - debe venir de env
     
     # --- Configuración JWT ---
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    SECRET_KEY: str  # Remove default, use env var
+    SECRET_KEY: str  # Sin valor por defecto - debe venir de env
     ALGORITHM: str = "HS256"
     
     # --- Configuración OAuth ---
-    google_client_id: str  # Remove default, use env var
-    google_client_secret: str  # Remove default, use env var
-    github_client_id: str  # Remove default, use env var
-    github_client_secret: str  # Remove default, use env var
-    discord_client_id: str  # Remove default, use env var
-    discord_client_secret: str  # Remove default, use env var
+    google_client_id: str  # Sin valor por defecto - debe venir de env
+    google_client_secret: str  # Sin valor por defecto - debe venir de env
+    github_client_id: str  # Sin valor por defecto - debe venir de env
+    github_client_secret: str  # Sin valor por defecto - debe venir de env
+    discord_client_id: str  # Sin valor por defecto - debe venir de env
+    discord_client_secret: str  # Sin valor por defecto - debe venir de env
     
-    oauth_redirect_base_url: str = "http://localhost:8000"
+    oauth_redirect_base_url: str 
     
     model_config = {
         "env_file": ".env",
