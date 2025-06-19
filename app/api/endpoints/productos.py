@@ -43,7 +43,7 @@ def listar_productos(db: Session = Depends(get_db)):
     Retorna:
         List[ProductoMostrar]: Una lista de productos.
     """
-    productos = db.query(Producto).all() # Consulta todos los registros de la tabla de productos.
+    productos = db.query(Producto).all()
     return productos
 
 @router.get("/{producto_id}", response_model=ProductoMostrar)

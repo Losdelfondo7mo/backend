@@ -29,12 +29,10 @@ class Settings(BaseSettings):
     
     # Configuración del modelo Pydantic para cargar variables de entorno.
     model_config = {
-        "env_file": ".env", # Nombre del archivo .env a cargar (si existe).
-        "env_file_encoding": "utf-8" # Codificación del archivo .env.
+        "env_file": ".env",
+        "env_file_encoding": "utf-8"
     }
     
-    # Nota: 'access_token_expire_minutes' parece ser un duplicado de 'ACCESS_TOKEN_EXPIRE_MINUTES'.
-    # Considerar eliminar uno para evitar confusión, a menos que tenga un propósito específico.
     access_token_expire_minutes: int = 30 
     
     # --- Configuración de API de Gmail (si se usa OAuth2 para enviar correos) ---

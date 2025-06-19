@@ -122,8 +122,6 @@ async def obtener_estadisticas_usuarios(db: Session = Depends(get_db)):
         administradores = db.query(UsuarioModel).filter(UsuarioModel.rol == "administrador").count()
         usuarios_regulares = db.query(UsuarioModel).filter(UsuarioModel.rol == "usuario").count()
         
-        # Para este ejemplo, consideramos todos los usuarios como activos
-        # Puedes agregar lógica adicional para determinar usuarios activos
         usuarios_activos = total_usuarios
         
         return EstadisticasUsuarios(

@@ -1,8 +1,6 @@
 from fastapi import APIRouter
-from app.api.endpoints import productos, usuarios, auth # Importa los módulos que contienen los routers específicos.
+from app.api.endpoints import productos, usuarios, auth
 
-# api_router es el router principal que agrupará todos los demás routers de la aplicación.
-# Esto ayuda a organizar las rutas de la API de forma modular.
 api_router = APIRouter()
 
 # Incluye el router para los endpoints de usuarios.

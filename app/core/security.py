@@ -11,8 +11,6 @@ from sqlalchemy.orm import Session # Para el tipado y la inyección de la sesió
 from app.db.session import get_db # Dependencia para obtener la sesión de la base de datos.
 
 # Configura el contexto de Passlib para el hashing de contraseñas.
-# 'bcrypt' es el algoritmo de hashing recomendado.
-# 'deprecated="auto"' permite la validación de hashes antiguos si se cambian los esquemas.
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Define el esquema OAuth2 para la obtención de tokens. 'tokenUrl' debe apuntar al endpoint de login.

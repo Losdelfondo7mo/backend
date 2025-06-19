@@ -1,14 +1,13 @@
-import smtplib # Para enviar correos usando el protocolo SMTP.
-import base64 # Para codificar el mensaje para la API de Gmail.
-from email.mime.text import MIMEText # Para crear el cuerpo del mensaje de correo en formato HTML o texto.
-from email.mime.multipart import MIMEMultipart # Para correos con múltiples partes (no usado directamente aquí pero útil).
+import smtplib
+import base64
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-# Para la autenticación y uso de la API de Gmail (si se elige este método).
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from app.config.settings import settings # Acceso a la configuración de la aplicación (credenciales de correo, etc.).
+from app.config.settings import settings
 
 def send_email_smtp(recipients: list, subject: str, body_html: str):
     """
