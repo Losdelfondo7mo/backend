@@ -27,6 +27,22 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "K#@p2X!vR7zY$qE9&bN*sW" # ¡CRÍTICO! Clave secreta para firmar los JWT. DEBE CAMBIARSE y gestionarse de forma segura (ej. variable de entorno).
     ALGORITHM: str = "HS256" # Algoritmo utilizado para la firma de los JWT (ej. HS256, RS256).
     
+    # --- Configuración OAuth ---
+    # Google OAuth
+    google_client_id: str = "966037719966-34npkep15h016rckbhb02305dqhi0jri.apps.googleusercontent.com"
+    google_client_secret: str = "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"
+    
+    # GitHub OAuth
+    github_client_id: str = "Ov23likTRjmlrvlmpm7C"
+    github_client_secret: str = "733cf157d58260d65bee6cdc154225c1169892d2"
+    
+    # Discord OAuth
+    discord_client_id: str = "1385140459092836382"
+    discord_client_secret: str = "NWVjOJuieZSwVAwJB9FvDrah7yWyE6iw"
+    
+    # URL base para redirecciones OAuth
+    oauth_redirect_base_url: str = "http://localhost:8000"
+    
     # Configuración del modelo Pydantic para cargar variables de entorno.
     model_config = {
         "env_file": ".env",
@@ -39,6 +55,10 @@ class Settings(BaseSettings):
     # Alcances (scopes) que la aplicación solicitará para acceder a la API de Gmail.
     # 'gmail.send' permite enviar correos en nombre del usuario autenticado.
     gmail_scopes: List[str] = ["https://www.googleapis.com/auth/gmail.send"]
+
+# Función para obtener la configuración
+def get_settings():
+    return Settings()
 
 # Crea una instancia global de la configuración para que pueda ser importada y utilizada
 # fácilmente en otros módulos de la aplicación.
