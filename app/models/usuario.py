@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text
 from sqlalchemy.orm import relationship
-from app.db.database import Base
+from app.db.base import Base
 from datetime import datetime
 
 class UsuarioModel(Base):
@@ -13,6 +13,14 @@ class UsuarioModel(Base):
     usuario = Column(String(50), unique=True, nullable=False, index=True)
     contraseña_hash = Column(String, nullable=True)  # Hacer nullable para usuarios OAuth
     rol = Column(String(20), nullable=False, default="usuario")
+    
+    # Campos para OAuth
+    oauth_provider = Column(String(50), nullable=True)  # 'google', 'github', 'discord'
+    oauth_id = Column(String(100), nullable=True)  # ID del usuario en el proveedor OAuth
+    avatar_url = Column(Text, nullable=True)  # URL del avatar del usuario
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
     
     ventas = relationship("Venta", back_populates="usuario")
     

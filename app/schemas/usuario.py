@@ -1,6 +1,14 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 
+class UsuarioLogin(BaseModel):
+    """
+    Esquema para el login de usuario.
+    Contiene solo los campos necesarios para autenticación.
+    """
+    usuario: str  # Nombre de usuario
+    contraseña: str  # Contraseña en texto plano
+
 class UsuarioBase(BaseModel):
     """
     Esquema base para un usuario. Define los campos comunes.

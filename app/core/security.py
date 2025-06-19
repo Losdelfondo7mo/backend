@@ -1,6 +1,6 @@
-from passlib.context import CryptContext # Utilizado para el hashing seguro de contraseñas.
-from datetime import datetime, timedelta # Necesario para establecer la expiración de los tokens.
-from jose import jwt, JWTError # Para crear y decodificar JSON Web Tokens (JWT).
+from datetime import datetime, timedelta
+from jose import jwt, JWTError
+from passlib.context import CryptContext  # ✅ AGREGAR ESTA IMPORTACIÓN
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer # Esquema de seguridad para obtener tokens Bearer de las cabeceras.
 
