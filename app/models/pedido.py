@@ -9,6 +9,7 @@ class EstadoPedido(enum.Enum):
     CONFIRMADO = "confirmado"
     DENEGADO = "denegado"
     ENTREGADO = "entregado"
+    CANCELADO = "cancelado"
 
 class PedidoModel(Base):
     __tablename__ = "pedidos"

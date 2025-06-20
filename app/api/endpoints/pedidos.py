@@ -206,3 +206,67 @@ def estadisticas_pedidos(db: Session = Depends(get_db), current_user: UsuarioMod
         pedidos_hoy=pedidos_hoy,
         ingresos_hoy=ingresos_hoy
     )
+
+@router.put("/cancelar/{pedido_id}", response_model=PedidoMostrar)
+def cancelar_pedido(pedido_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_active_user)):
+    """
+    Cancela un pedido pendiente. Puede ser cancelado por el usuario que lo creó o por un administrador.
+    """
+    # Buscar el pedido
+    pedido = db.query(PedidoModel).filter(PedidoModel.id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pedido no encontrado"
+        )
+    
+    # Verificar que el usuario es el dueño del pedido o un administrador
+    if pedido.usuario_id != current_user.id and current_user.rol != "administrador":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tiene permiso para cancelar este pedido"
+        )
+    
+    # Verificar que el pedido está en un estado que puede ser cancelado
+    if pedido.estado != EstadoPedido.PENDIENTE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Solo se pueden cancelar pedidos pendientes"
+        )
+    
+    # Cancelar pedido
+    pedido.estado = EstadoPedido.CANCELADO
+    
+    # Enviar correo de cancelación
+    usuario = db.query(UsuarioModel).filter(UsuarioModel.id == pedido.usuario_id).first()
+    if usuario and usuario.email:
+        background_tasks.add_task(
+            send_email_smtp,
+            email_to=usuario.email,
+            subject="Pedido Cancelado",
+            html_content=f"<p>Su pedido #{pedido.n_pedido} ha sido cancelado.</p>"
+        )
+        pedido.correo_enviado = True
+    
+    db.commit()
+    db.refresh(pedido)
+    return pedido
+
+@router.delete("/{pedido_id}", status_code=204)
+def eliminar_pedido(pedido_id: int, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_admin_user)):
+    """
+    Elimina un pedido completamente de la base de datos. Solo para administradores.
+    """
+    # Buscar el pedido
+    pedido = db.query(PedidoModel).filter(PedidoModel.id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pedido no encontrado"
+        )
+    
+    # Eliminar el pedido (los detalles se eliminarán en cascada)
+    db.delete(pedido)
+    db.commit()
+    
+    return None

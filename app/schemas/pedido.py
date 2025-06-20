@@ -8,6 +8,7 @@ class EstadoPedido(str, Enum):
     CONFIRMADO = "confirmado"
     DENEGADO = "denegado"
     ENTREGADO = "entregado"
+    CANCELADO = "cancelado"
 
 class DetallePedidoBase(BaseModel):
     cantidad: int
