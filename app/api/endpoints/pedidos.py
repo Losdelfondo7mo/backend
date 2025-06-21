@@ -10,15 +10,17 @@ from app.models.detalle_pedido import DetallePedidoModel
 from app.models.producto import Producto
 from app.models.usuario import UsuarioModel
 from app.schemas.pedido import PedidoCrear, PedidoMostrar, EstadisticasPedidos, PedidoConfirmar, DetallePedidoMostrar
-from app.core.security import get_current_active_user, get_current_admin_user
+# Comentamos las importaciones de autenticación que no vamos a usar
+# from app.core.security import get_current_active_user, get_current_admin_user
 from app.services.email_service import send_email_smtp
 
 router = APIRouter()
 
 @router.post("/", response_model=PedidoMostrar, status_code=201)
-def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_active_user)):
+def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Registra un nuevo pedido en el sistema como pendiente.
+    Ya no requiere autenticación.
     """
     # Generar número de pedido único
     import random
@@ -48,7 +50,7 @@ def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Ses
     # Crear el pedido
     nuevo_pedido = PedidoModel(
         n_pedido=n_pedido,
-        usuario_id=current_user.id,
+        usuario_id=pedido.usuario_id,  # Ahora usamos el usuario_id del pedido directamente
         monto_total=monto_total,
         estado=EstadoPedido.PENDIENTE,
         correo_enviado=False
@@ -74,17 +76,19 @@ def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Ses
     return nuevo_pedido
 
 @router.get("/pendientes", response_model=List[PedidoMostrar])
-def listar_pedidos_pendientes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_admin_user)):
+def listar_pedidos_pendientes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
-    Lista todos los pedidos pendientes. Solo para administradores.
+    Lista todos los pedidos pendientes.
+    Ya no requiere autenticación de administrador.
     """
     pedidos = db.query(PedidoModel).filter(PedidoModel.estado == EstadoPedido.PENDIENTE).offset(skip).limit(limit).all()
     return pedidos
 
 @router.put("/confirmar/{pedido_id}", response_model=PedidoMostrar)
-def confirmar_pedido(pedido_id: int, confirmacion: PedidoConfirmar, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_admin_user)):
+def confirmar_pedido(pedido_id: int, confirmacion: PedidoConfirmar, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
-    Confirma o deniega un pedido. Solo para administradores.
+    Confirma o deniega un pedido.
+    Ya no requiere autenticación de administrador.
     """
     # Buscar el pedido
     pedido = db.query(PedidoModel).filter(PedidoModel.id == pedido_id).first()
@@ -135,17 +139,19 @@ def confirmar_pedido(pedido_id: int, confirmacion: PedidoConfirmar, background_t
     return pedido
 
 @router.get("/mis-pedidos", response_model=List[PedidoMostrar])
-def mis_pedidos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_active_user)):
+def mis_pedidos(usuario_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
-    Lista todos los pedidos del usuario actual.
+    Lista todos los pedidos de un usuario específico.
+    Ya no requiere autenticación, pero ahora requiere el usuario_id como parámetro.
     """
-    pedidos = db.query(PedidoModel).filter(PedidoModel.usuario_id == current_user.id).offset(skip).limit(limit).all()
+    pedidos = db.query(PedidoModel).filter(PedidoModel.usuario_id == usuario_id).offset(skip).limit(limit).all()
     return pedidos
 
 @router.get("/estadisticas", response_model=EstadisticasPedidos)
-def estadisticas_pedidos(db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_admin_user)):
+def estadisticas_pedidos(db: Session = Depends(get_db)):
     """
-    Obtiene estadísticas de pedidos. Solo para administradores.
+    Obtiene estadísticas de pedidos.
+    Ya no requiere autenticación de administrador.
     """
     # Total de pedidos
     total_pedidos = db.query(func.count(PedidoModel.id)).scalar()
@@ -208,9 +214,10 @@ def estadisticas_pedidos(db: Session = Depends(get_db), current_user: UsuarioMod
     )
 
 @router.put("/cancelar/{pedido_id}", response_model=PedidoMostrar)
-def cancelar_pedido(pedido_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_active_user)):
+def cancelar_pedido(pedido_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
-    Cancela un pedido pendiente. Puede ser cancelado por el usuario que lo creó o por un administrador.
+    Cancela un pedido pendiente.
+    Ya no requiere autenticación.
     """
     # Buscar el pedido
     pedido = db.query(PedidoModel).filter(PedidoModel.id == pedido_id).first()
@@ -218,13 +225,6 @@ def cancelar_pedido(pedido_id: int, background_tasks: BackgroundTasks, db: Sessi
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Pedido no encontrado"
-        )
-    
-    # Verificar que el usuario es el dueño del pedido o un administrador
-    if pedido.usuario_id != current_user.id and current_user.rol != "administrador":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tiene permiso para cancelar este pedido"
         )
     
     # Verificar que el pedido está en un estado que puede ser cancelado
@@ -253,9 +253,10 @@ def cancelar_pedido(pedido_id: int, background_tasks: BackgroundTasks, db: Sessi
     return pedido
 
 @router.delete("/{pedido_id}", status_code=204)
-def eliminar_pedido(pedido_id: int, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_admin_user)):
+def eliminar_pedido(pedido_id: int, db: Session = Depends(get_db)):
     """
-    Elimina un pedido completamente de la base de datos. Solo para administradores.
+    Elimina un pedido completamente de la base de datos.
+    Ya no requiere autenticación de administrador.
     """
     # Buscar el pedido
     pedido = db.query(PedidoModel).filter(PedidoModel.id == pedido_id).first()

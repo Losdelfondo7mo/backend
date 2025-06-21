@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 class ProductoBase(BaseModel):
@@ -18,4 +18,16 @@ class ProductoMostrar(ProductoBase):
     id: int
     
     model_config = ConfigDict(from_attributes=True)
+
+# Nueva estructura para crear productos
+class ProductoItem(BaseModel):
+    id: int
+    nombre: str
+    precio: float
+    cantidad: int
+
+class ProductoPedidoCrear(BaseModel):
+    usuario: str
+    productos: List[ProductoItem]
+    total: float
  

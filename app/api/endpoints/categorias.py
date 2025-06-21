@@ -5,13 +5,18 @@ from typing import List
 from app.db.session import get_db
 from app.models.categoria import CategoriaModel
 from app.schemas.categoria import CategoriaCrear, CategoriaMostrar
-from app.core.security import get_current_active_user, get_current_admin_user
+# Comentamos las importaciones de autenticación que no vamos a usar
+# from app.core.security import get_current_active_user, get_current_admin_user
 from app.models.usuario import UsuarioModel
 
 router = APIRouter()
 
 @router.post("/", response_model=CategoriaMostrar, status_code=201)
-def crear_categoria(categoria: CategoriaCrear, db: Session = Depends(get_db), current_user: UsuarioModel = Depends(get_current_admin_user)):
+def crear_categoria(categoria: CategoriaCrear, db: Session = Depends(get_db)):
+    """
+    Crea una nueva categoría.
+    Ya no requiere autenticación de administrador.
+    """
     db_categoria = CategoriaModel(nombre=categoria.nombre)
     db.add(db_categoria)
     db.commit()
