@@ -19,7 +19,6 @@ class ProductoMostrar(ProductoBase):
     
     model_config = ConfigDict(from_attributes=True)
 
-# Nueva estructura para crear productos
 class ProductoItem(BaseModel):
     id: int
     nombre: str

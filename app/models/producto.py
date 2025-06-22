@@ -13,9 +13,7 @@ class Producto(Base):
     correo = Column(String(100), nullable=True)
     tipo = Column(String(50), nullable=True)
     disponibilidad = Column(Boolean, default=True)
-    categoria_id = Column(Integer, ForeignKey("categorias.id"), nullable=False)
-    # Se eliminó imagen_url ya que no existe en la base de datos
-    # Se eliminó fecha ya que no existe en la base de datos
+    categoria_id = Column(Integer, ForeignKey("categorias.id"), nullable=True)
     
     # Relaciones
     categoria = relationship("CategoriaModel", back_populates="productos")

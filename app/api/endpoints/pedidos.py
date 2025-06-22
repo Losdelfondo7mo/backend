@@ -27,6 +27,23 @@ def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Ses
     import string
     n_pedido = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
     
+    # Verificar si el usuario existe, si no, crear un usuario anónimo
+    usuario = None
+    if pedido.usuario_id:
+        usuario = db.query(UsuarioModel).filter(UsuarioModel.id == pedido.usuario_id).first()
+    
+    if not usuario:
+        # Crear un usuario anónimo
+        usuario = UsuarioModel(
+            nombre="Anónimo",
+            apellido="Anónimo",
+            email=f"anonimo_{n_pedido}@example.com",  # Email único
+            usuario=f"anonimo_{n_pedido}",  # Usuario único
+            rol="usuario"
+        )
+        db.add(usuario)
+        db.flush()  # Esto asigna un ID al usuario sin hacer commit
+    
     # Calcular monto total
     monto_total = 0
     for detalle in pedido.detalles:
@@ -50,7 +67,7 @@ def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Ses
     # Crear el pedido
     nuevo_pedido = PedidoModel(
         n_pedido=n_pedido,
-        usuario_id=pedido.usuario_id,  # Ahora usamos el usuario_id del pedido directamente
+        usuario_id=usuario.id,  # Usamos el ID del usuario existente o del recién creado
         monto_total=monto_total,
         estado=EstadoPedido.PENDIENTE,
         correo_enviado=False

@@ -9,6 +9,7 @@ from app.schemas.producto import ProductoCrear, ProductoMostrar, ProductoPedidoC
 # Comentamos la importación de autenticación que no vamos a usar
 # from app.core.security import get_current_active_user # Dependencia para obtener el usuario autenticado y activo.
 from app.models.usuario import UsuarioModel # Modelo de Usuario, usado aquí para el tipado del usuario actual.
+from app.models.categoria import CategoriaModel  # Añade esta importación al inicio del archivo
 
 router = APIRouter() # Crea un router para los endpoints relacionados con productos.
 
@@ -41,12 +42,21 @@ def crear_producto_endpoint(producto_pedido: ProductoPedidoCrear, db: Session = 
         db.refresh(producto_existente)
         return producto_existente
     else:
+        # Obtener una categoría existente o crear una por defecto
+        categoria = db.query(CategoriaModel).first()
+        if not categoria:
+            # Si no hay categorías, crear una por defecto
+            categoria = CategoriaModel(nombre="General")
+            db.add(categoria)
+            db.commit()
+            db.refresh(categoria)
+        
         # Crear nuevo producto
         nuevo_producto = Producto(
             nombre=item.nombre,
             precio=item.precio,
-            # Otros campos necesarios
-            disponibilidad=True
+            disponibilidad=True,
+            categoria_id=categoria.id  # Asignar el ID de la categoría
         )
         db.add(nuevo_producto)
         db.commit()
