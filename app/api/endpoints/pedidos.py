@@ -22,16 +22,21 @@ def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Ses
     """
     Registra un nuevo pedido en el sistema como pendiente.
     Acepta una lista de productos con id, nombre, precio y cantidad.
+    Puede recibir usuario_id o nombre de usuario (campo 'usuario').
     """
     # Generar número de pedido único
     import random
     import string
     n_pedido = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
     
-    # Verificar si el usuario existe, si no, crear un usuario anónimo
+    # Verificar si el usuario existe, primero por ID y luego por nombre de usuario
     usuario = None
     if pedido.usuario_id:
         usuario = db.query(UsuarioModel).filter(UsuarioModel.id == pedido.usuario_id).first()
+    
+    # Si no se encontró por ID pero se proporcionó un nombre de usuario, buscar por nombre
+    if not usuario and pedido.usuario:
+        usuario = db.query(UsuarioModel).filter(UsuarioModel.usuario == pedido.usuario).first()
     
     if not usuario:
         # Crear un usuario anónimo

@@ -39,6 +39,7 @@ class PedidoCrear(BaseModel):
     productos: List[ProductoItem]
     total: Optional[float] = None
     usuario_id: Optional[int] = None
+    usuario: Optional[str] = None  # Añadimos el campo usuario como string opcional
 
 # Esquema para editar pedidos
 class PedidoEditar(BaseModel):
