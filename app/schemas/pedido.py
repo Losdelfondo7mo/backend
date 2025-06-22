@@ -41,6 +41,16 @@ class PedidoCrear(BaseModel):
     # Campo opcional para asociar con un usuario existente
     usuario_id: Optional[int] = None
 
+# Esquema para editar pedidos con la misma estructura simplificada
+class PedidoEditar(BaseModel):
+    # Datos del producto
+    categoria: Optional[str] = None
+    descripcion: Optional[str] = None
+    disponibilidad: Optional[bool] = None
+    nombre: Optional[str] = None
+    precio: Optional[float] = None
+    cantidad: Optional[int] = None
+
 class PedidoMostrar(PedidoBase):
     id: int
     estado: EstadoPedido

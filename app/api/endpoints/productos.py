@@ -143,7 +143,7 @@ def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
 @router.put("/{producto_id}", response_model=ProductoMostrar)
 def actualizar_producto(producto_id: int, producto_actualizado: ProductoCrear, db: Session = Depends(get_db)):
     """
-    Actualiza la información de un producto existente, identificado por su ID.
+    Actualiza un producto existente utilizando su ID.
     Ya no requiere autenticación.
 
     Parámetros:
@@ -161,9 +161,28 @@ def actualizar_producto(producto_id: int, producto_actualizado: ProductoCrear, d
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     
-    # Itera sobre los datos del producto actualizado y los asigna al modelo existente.
-    for key, value in producto_actualizado.model_dump().items():
-        setattr(producto, key, value)
+    # Manejar el campo categoria especialmente
+    datos_actualizados = producto_actualizado.model_dump()
+    if 'categoria' in datos_actualizados and datos_actualizados['categoria']:
+        from app.models.categoria import CategoriaModel
+        
+        # Buscar o crear la categoría
+        categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == datos_actualizados['categoria']).first()
+        if not categoria:
+            categoria = CategoriaModel(nombre=datos_actualizados['categoria'])
+            db.add(categoria)
+            db.flush()
+        
+        # Asignar el ID de la categoría al producto
+        producto.categoria_id = categoria.id
+        
+        # Eliminar el campo categoria para que no intente asignarlo directamente
+        del datos_actualizados['categoria']
+    
+    # Actualizar los demás campos
+    for key, value in datos_actualizados.items():
+        if hasattr(producto, key):
+            setattr(producto, key, value)
     
     db.commit() # Guarda los cambios en la base de datos.
     db.refresh(producto) # Refresca la instancia del producto.

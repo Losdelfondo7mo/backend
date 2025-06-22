@@ -306,3 +306,91 @@ def eliminar_pedido(pedido_id: int, db: Session = Depends(get_db)):
     db.commit()
     
     return None
+
+# Añadir esta importación al inicio del archivo
+from app.schemas.pedido import PedidoEditar
+
+# Añadir este nuevo endpoint después de los existentes
+@router.put("/{pedido_id}", response_model=PedidoMostrar)
+def editar_pedido(pedido_id: int, pedido_actualizado: PedidoEditar, db: Session = Depends(get_db)):
+    """
+    Edita un pedido existente y su producto asociado.
+    Solo se pueden editar pedidos en estado PENDIENTE.
+    """
+    # Buscar el pedido
+    pedido = db.query(PedidoModel).filter(PedidoModel.id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pedido no encontrado"
+        )
+    
+    # Verificar que el pedido está en estado pendiente
+    if pedido.estado != EstadoPedido.PENDIENTE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Solo se pueden editar pedidos pendientes"
+        )
+    
+    # Obtener el detalle del pedido (asumimos que solo hay uno por la estructura simplificada)
+    detalle = db.query(DetallePedidoModel).filter(DetallePedidoModel.pedido_id == pedido_id).first()
+    if not detalle:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Detalle de pedido no encontrado"
+        )
+    
+    # Obtener el producto asociado al detalle
+    producto = db.query(Producto).filter(Producto.id == detalle.producto_id).first()
+    if not producto:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Producto no encontrado"
+        )
+    
+    # Actualizar la categoría si se proporciona
+    if pedido_actualizado.categoria:
+        from app.models.categoria import CategoriaModel
+        
+        # Buscar o crear la categoría
+        categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == pedido_actualizado.categoria).first()
+        if not categoria:
+            categoria = CategoriaModel(nombre=pedido_actualizado.categoria)
+            db.add(categoria)
+            db.flush()
+            
+        # Actualizar la categoría del producto
+        producto.categoria_id = categoria.id
+    
+    # Actualizar los campos del producto si se proporcionan
+    if pedido_actualizado.nombre is not None:
+        producto.nombre = pedido_actualizado.nombre
+    
+    if pedido_actualizado.descripcion is not None:
+        producto.descripcion = pedido_actualizado.descripcion
+    
+    if pedido_actualizado.disponibilidad is not None:
+        producto.disponibilidad = pedido_actualizado.disponibilidad
+    
+    # Actualizar el precio y recalcular el monto total si es necesario
+    precio_actualizado = False
+    if pedido_actualizado.precio is not None and pedido_actualizado.precio != detalle.precio_unitario:
+        detalle.precio_unitario = pedido_actualizado.precio
+        producto.precio = pedido_actualizado.precio
+        precio_actualizado = True
+    
+    # Actualizar la cantidad y recalcular el monto total si es necesario
+    cantidad_actualizada = False
+    if pedido_actualizado.cantidad is not None and pedido_actualizado.cantidad != detalle.cantidad:
+        detalle.cantidad = pedido_actualizado.cantidad
+        cantidad_actualizada = True
+    
+    # Recalcular el monto total si cambió el precio o la cantidad
+    if precio_actualizado or cantidad_actualizada:
+        pedido.monto_total = detalle.precio_unitario * detalle.cantidad
+    
+    # Guardar los cambios
+    db.commit()
+    db.refresh(pedido)
+    
+    return pedido
