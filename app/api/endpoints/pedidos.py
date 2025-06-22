@@ -248,38 +248,49 @@ def cancelar_pedido(pedido_id: int, background_tasks: BackgroundTasks, db: Sessi
     Cancela un pedido pendiente.
     Ya no requiere autenticación.
     """
-    # Buscar el pedido
-    pedido = db.query(PedidoModel).filter(PedidoModel.id == pedido_id).first()
-    if not pedido:
+    try:
+        # Buscar el pedido
+        pedido = db.query(PedidoModel).filter(PedidoModel.id == pedido_id).first()
+        if not pedido:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Pedido no encontrado"
+            )
+        
+        # Verificar que el pedido está en un estado que puede ser cancelado
+        if pedido.estado != EstadoPedido.PENDIENTE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Solo se pueden cancelar pedidos pendientes"
+            )
+        
+        # Cancelar pedido
+        pedido.estado = EstadoPedido.CANCELADO
+        
+        # Enviar correo de cancelación
+        usuario = db.query(UsuarioModel).filter(UsuarioModel.id == pedido.usuario_id).first()
+        if usuario and usuario.email:
+            background_tasks.add_task(
+                send_email_smtp,
+                email_to=usuario.email,
+                subject="Pedido Cancelado",
+                html_content=f"<p>Su pedido #{pedido.n_pedido} ha sido cancelado.</p>"
+            )
+            pedido.correo_enviado = True
+        
+        # Hacer commit de los cambios
+        db.commit()
+        db.refresh(pedido)
+        return pedido
+    except Exception as e:
+        # Hacer rollback en caso de error
+        db.rollback()
+        # Registrar el error para depuración
+        print(f"Error al cancelar pedido: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Pedido no encontrado"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al cancelar el pedido: {str(e)}"
         )
-    
-    # Verificar que el pedido está en un estado que puede ser cancelado
-    if pedido.estado != EstadoPedido.PENDIENTE:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Solo se pueden cancelar pedidos pendientes"
-        )
-    
-    # Cancelar pedido
-    pedido.estado = EstadoPedido.CANCELADO
-    
-    # Enviar correo de cancelación
-    usuario = db.query(UsuarioModel).filter(UsuarioModel.id == pedido.usuario_id).first()
-    if usuario and usuario.email:
-        background_tasks.add_task(
-            send_email_smtp,
-            email_to=usuario.email,
-            subject="Pedido Cancelado",
-            html_content=f"<p>Su pedido #{pedido.n_pedido} ha sido cancelado.</p>"
-        )
-        pedido.correo_enviado = True
-    
-    db.commit()
-    db.refresh(pedido)
-    return pedido
 
 @router.delete("/{pedido_id}", status_code=204)
 def eliminar_pedido(pedido_id: int, db: Session = Depends(get_db)):
