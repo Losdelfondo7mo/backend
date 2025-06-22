@@ -54,7 +54,16 @@ def crear_producto_endpoint(producto: ProductoCrear, db: Session = Depends(get_d
     db.commit()
     db.refresh(nuevo_producto)
     
-    return nuevo_producto
+    # Return a dictionary with properly formatted fields
+    return {
+        "id": nuevo_producto.id,
+        "nombre": nuevo_producto.nombre,
+        "descripcion": nuevo_producto.descripcion,
+        "precio": nuevo_producto.precio,
+        "disponibilidad": nuevo_producto.disponibilidad,
+        "categoria_id": nuevo_producto.categoria_id,
+        "categoria": categoria.nombre if categoria else None
+    }
 
 # Mantener el endpoint original para compatibilidad con el formato anterior
 @router.post("/crear_pedido", response_model=ProductoMostrar, status_code=201)
@@ -208,6 +217,23 @@ def actualizar_producto(producto_id: int, producto_actualizado: ProductoCrear, d
         # Eliminar el campo categoria para que no intente asignarlo directamente
         del datos_actualizados['categoria']
     
+    # Verificar que categoria_id sea válido si está presente
+    if 'categoria_id' in datos_actualizados and datos_actualizados['categoria_id'] is not None:
+        # Verificar si la categoría existe
+        categoria_existe = db.query(CategoriaModel).filter(
+            CategoriaModel.id == datos_actualizados['categoria_id']
+        ).first()
+        
+        if not categoria_existe:
+            # Si la categoría no existe, usar una categoría por defecto o crear una nueva
+            categoria_default = db.query(CategoriaModel).first()
+            if not categoria_default:
+                categoria_default = CategoriaModel(nombre="General")
+                db.add(categoria_default)
+                db.flush()
+            
+            datos_actualizados['categoria_id'] = categoria_default.id
+    
     # Actualizar los demás campos
     for key, value in datos_actualizados.items():
         if hasattr(producto, key):
@@ -215,7 +241,17 @@ def actualizar_producto(producto_id: int, producto_actualizado: ProductoCrear, d
     
     db.commit() # Guarda los cambios en la base de datos.
     db.refresh(producto) # Refresca la instancia del producto.
-    return producto
+    
+    # Devolver un diccionario con los campos formateados correctamente
+    return {
+        "id": producto.id,
+        "nombre": producto.nombre,
+        "descripcion": producto.descripcion,
+        "precio": producto.precio,
+        "disponibilidad": producto.disponibilidad,
+        "categoria_id": producto.categoria_id,
+        "categoria": producto.categoria.nombre if producto.categoria else None
+    }
 
 @router.delete("/{producto_id}", status_code=204) # HTTP 204 indica éxito sin contenido de respuesta.
 def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):

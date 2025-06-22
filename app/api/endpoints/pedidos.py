@@ -264,8 +264,14 @@ def cancelar_pedido(pedido_id: int, background_tasks: BackgroundTasks, db: Sessi
                 detail="Solo se pueden cancelar pedidos pendientes"
             )
         
-        # Cancelar pedido - Asegurarse de usar el enum correctamente
-        pedido.estado = EstadoPedido.CANCELADO
+        # Actualizar el estado usando el modelo ORM directamente
+        # Esto evita problemas con la conversión de enums
+        from sqlalchemy import update
+        stmt = update(PedidoModel).where(PedidoModel.id == pedido_id).values(
+            estado=EstadoPedido.CANCELADO,
+            correo_enviado=True
+        )
+        db.execute(stmt)
         
         # Enviar correo de cancelación
         usuario = db.query(UsuarioModel).filter(UsuarioModel.id == pedido.usuario_id).first()
@@ -276,11 +282,11 @@ def cancelar_pedido(pedido_id: int, background_tasks: BackgroundTasks, db: Sessi
                 subject="Pedido Cancelado",
                 html_content=f"<p>Su pedido #{pedido.n_pedido} ha sido cancelado.</p>"
             )
-            pedido.correo_enviado = True
         
         # Hacer commit de los cambios
         db.commit()
-        db.refresh(pedido)
+        # Refrescar el pedido para obtener los cambios
+        pedido = db.query(PedidoModel).filter(PedidoModel.id == pedido_id).first()
         return pedido
     except Exception as e:
         # Hacer rollback en caso de error

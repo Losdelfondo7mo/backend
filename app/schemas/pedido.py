@@ -4,11 +4,11 @@ from typing import Optional, List
 from enum import Enum
 
 class EstadoPedido(str, Enum):
-    PENDIENTE = "pendiente"
-    CONFIRMADO = "confirmado"
-    DENEGADO = "denegado"
-    ENTREGADO = "entregado"
-    CANCELADO = "cancelado"
+    PENDIENTE = "PENDIENTE"
+    CONFIRMADO = "CONFIRMADO"
+    DENEGADO = "DENEGADO"
+    ENTREGADO = "ENTREGADO"
+    CANCELADO = "CANCELADO"
 
 class ProductoItem(BaseModel):
     id: int

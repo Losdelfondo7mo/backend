@@ -5,11 +5,11 @@ from app.db.base import Base
 import enum
 
 class EstadoPedido(enum.Enum):
-    PENDIENTE = "pendiente"
-    CONFIRMADO = "confirmado"
-    DENEGADO = "denegado"
-    ENTREGADO = "entregado"
-    CANCELADO = "cancelado"
+    PENDIENTE = "PENDIENTE"
+    CONFIRMADO = "CONFIRMADO"
+    DENEGADO = "DENEGADO"
+    ENTREGADO = "ENTREGADO"
+    CANCELADO = "CANCELADO"
 
 class PedidoModel(Base):
     __tablename__ = "pedidos"
