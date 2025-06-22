@@ -16,6 +16,7 @@ class ProductoCrear(ProductoBase):
 
 class ProductoMostrar(ProductoBase):
     id: int
+    categoria: Optional[str] = None  # Añadimos el campo para mostrar el nombre de la categoría
     
     model_config = ConfigDict(from_attributes=True)
 

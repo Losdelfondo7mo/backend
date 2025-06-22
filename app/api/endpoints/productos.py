@@ -115,9 +115,16 @@ def listar_productos(db: Session = Depends(get_db)):
         db (Session): Sesión de SQLAlchemy para la base de datos.
 
     Retorna:
-        List[ProductoMostrar]: Una lista de productos.
+        List[ProductoMostrar]: Una lista de productos con información de categoría.
     """
-    productos = db.query(Producto).all()
+    # Usamos join para cargar la relación con categoría
+    productos = db.query(Producto).join(Producto.categoria, isouter=True).all()
+    
+    # Añadimos el nombre de la categoría a cada producto
+    for producto in productos:
+        if producto.categoria:
+            producto.categoria = producto.categoria.nombre
+    
     return productos
 
 @router.get("/{producto_id}", response_model=ProductoMostrar)
@@ -133,11 +140,16 @@ def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
         HTTPException (404): Si no se encuentra ningún producto con el ID proporcionado.
 
     Retorna:
-        ProductoMostrar: Los detalles del producto encontrado.
+        ProductoMostrar: Los detalles del producto encontrado con información de categoría.
     """
-    producto = db.query(Producto).filter(Producto.id == producto_id).first() # Busca el producto por su ID.
+    producto = db.query(Producto).join(Producto.categoria, isouter=True).filter(Producto.id == producto_id).first()
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
+    
+    # Añadir el nombre de la categoría
+    if producto.categoria:
+        producto.categoria = producto.categoria.nombre
+    
     return producto
 
 @router.put("/{producto_id}", response_model=ProductoMostrar)
