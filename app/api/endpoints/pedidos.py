@@ -17,11 +17,11 @@ from app.services.email_service import send_email_smtp
 
 router = APIRouter()
 
-@router.post("/", response_model=PedidoMostrar, status_code=201)
+@router.post("/crear", response_model=PedidoMostrar, status_code=201)
 def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Registra un nuevo pedido en el sistema como pendiente.
-    Acepta directamente los datos del producto (nombre, precio, categoría, etc.)
+    Acepta una lista de productos con id, nombre, precio y cantidad.
     """
     # Generar número de pedido único
     import random
@@ -45,43 +45,8 @@ def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Ses
         db.add(usuario)
         db.flush()  # Esto asigna un ID al usuario sin hacer commit
     
-    # Buscar o crear la categoría
-    categoria = None
-    if pedido.categoria:
-        categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == pedido.categoria).first()
-        if not categoria:
-            categoria = CategoriaModel(nombre=pedido.categoria)
-            db.add(categoria)
-            db.flush()
-    else:
-        # Si no se proporciona categoría, usar una por defecto
-        categoria = db.query(CategoriaModel).first()
-        if not categoria:
-            categoria = CategoriaModel(nombre="General")
-            db.add(categoria)
-            db.flush()
-    
-    # Buscar si el producto ya existe o crear uno nuevo
-    producto = db.query(Producto).filter(
-        Producto.nombre == pedido.nombre,
-        Producto.precio == pedido.precio
-    ).first()
-    
-    if not producto:
-        # Crear el producto
-        producto = Producto(
-            nombre=pedido.nombre,
-            descripcion=pedido.descripcion,
-            precio=pedido.precio,
-            disponibilidad=pedido.disponibilidad if pedido.disponibilidad is not None else True,
-            categoria_id=categoria.id
-        )
-        db.add(producto)
-        db.flush()
-    
-    # Calcular monto total
-    cantidad = pedido.cantidad or 1
-    monto_total = pedido.precio * cantidad
+    # Calcular monto total si no se proporciona
+    monto_total = pedido.total if pedido.total is not None else sum(item.precio * item.cantidad for item in pedido.productos)
     
     # Crear el pedido
     nuevo_pedido = PedidoModel(
@@ -96,14 +61,38 @@ def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Ses
     db.commit()
     db.refresh(nuevo_pedido)
     
-    # Crear el detalle del pedido
-    nuevo_detalle = DetallePedidoModel(
-        pedido_id=nuevo_pedido.id,
-        producto_id=producto.id,
-        cantidad=cantidad,
-        precio_unitario=pedido.precio
-    )
-    db.add(nuevo_detalle)
+    # Crear los detalles del pedido para cada producto
+    for item in pedido.productos:
+        # Verificar si el producto existe
+        producto = db.query(Producto).filter(Producto.id == item.id).first()
+        
+        if not producto:
+            # Si el producto no existe, crearlo
+            # Obtener una categoría por defecto
+            categoria = db.query(CategoriaModel).first()
+            if not categoria:
+                categoria = CategoriaModel(nombre="General")
+                db.add(categoria)
+                db.flush()
+            
+            producto = Producto(
+                id=item.id,
+                nombre=item.nombre,
+                precio=item.precio,
+                disponibilidad=True,
+                categoria_id=categoria.id
+            )
+            db.add(producto)
+            db.flush()
+        
+        # Crear el detalle del pedido
+        nuevo_detalle = DetallePedidoModel(
+            pedido_id=nuevo_pedido.id,
+            producto_id=producto.id,
+            cantidad=item.cantidad,
+            precio_unitario=item.precio
+        )
+        db.add(nuevo_detalle)
     
     db.commit()
     db.refresh(nuevo_pedido)

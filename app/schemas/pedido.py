@@ -10,6 +10,12 @@ class EstadoPedido(str, Enum):
     ENTREGADO = "entregado"
     CANCELADO = "cancelado"
 
+class ProductoItem(BaseModel):
+    id: int
+    nombre: str
+    precio: float
+    cantidad: int
+
 class DetallePedidoBase(BaseModel):
     cantidad: int
     precio_unitario: float
@@ -28,20 +34,13 @@ class PedidoBase(BaseModel):
     n_pedido: str
     usuario_id: int
 
-# Simplificamos PedidoCrear para usar principalmente la estructura de datos del producto
+# Modificamos PedidoCrear para aceptar una lista de productos
 class PedidoCrear(BaseModel):
-    # Datos del producto (estructura principal)
-    categoria: Optional[str] = None
-    descripcion: Optional[str] = None
-    disponibilidad: Optional[bool] = True
-    nombre: str
-    precio: float
-    cantidad: Optional[int] = 1  # Por defecto 1 unidad
-    
-    # Campo opcional para asociar con un usuario existente
+    productos: List[ProductoItem]
+    total: Optional[float] = None
     usuario_id: Optional[int] = None
 
-# Esquema para editar pedidos con la misma estructura simplificada
+# Esquema para editar pedidos
 class PedidoEditar(BaseModel):
     # Datos del producto
     categoria: Optional[str] = None
