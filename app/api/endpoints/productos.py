@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from datetime import datetime
 
@@ -118,14 +118,24 @@ def listar_productos(db: Session = Depends(get_db)):
         List[ProductoMostrar]: Una lista de productos con información de categoría.
     """
     # Usamos join para cargar la relación con categoría
-    productos = db.query(Producto).join(Producto.categoria, isouter=True).all()
+    productos = db.query(Producto).options(joinedload(Producto.categoria)).all()
     
-    # Añadimos el nombre de la categoría a cada producto
+    # Creamos una lista de diccionarios con la información necesaria
+    resultado = []
     for producto in productos:
-        if producto.categoria:
-            producto.categoria = producto.categoria.nombre
+        # Creamos una copia del producto para no modificar el objeto original
+        producto_dict = {
+            "id": producto.id,
+            "nombre": producto.nombre,
+            "descripcion": producto.descripcion,
+            "precio": producto.precio,
+            "disponibilidad": producto.disponibilidad,
+            "categoria_id": producto.categoria_id,
+            "categoria": producto.categoria.nombre if producto.categoria else None
+        }
+        resultado.append(producto_dict)
     
-    return productos
+    return resultado
 
 @router.get("/{producto_id}", response_model=ProductoMostrar)
 def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
@@ -142,15 +152,22 @@ def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
     Retorna:
         ProductoMostrar: Los detalles del producto encontrado con información de categoría.
     """
-    producto = db.query(Producto).join(Producto.categoria, isouter=True).filter(Producto.id == producto_id).first()
+    producto = db.query(Producto).options(joinedload(Producto.categoria)).filter(Producto.id == producto_id).first()
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     
-    # Añadir el nombre de la categoría
-    if producto.categoria:
-        producto.categoria = producto.categoria.nombre
+    # Creamos un diccionario con la información necesaria
+    producto_dict = {
+        "id": producto.id,
+        "nombre": producto.nombre,
+        "descripcion": producto.descripcion,
+        "precio": producto.precio,
+        "disponibilidad": producto.disponibilidad,
+        "categoria_id": producto.categoria_id,
+        "categoria": producto.categoria.nombre if producto.categoria else None
+    }
     
-    return producto
+    return producto_dict
 
 @router.put("/{producto_id}", response_model=ProductoMostrar)
 def actualizar_producto(producto_id: int, producto_actualizado: ProductoCrear, db: Session = Depends(get_db)):
