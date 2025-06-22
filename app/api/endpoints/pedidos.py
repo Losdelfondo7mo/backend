@@ -264,7 +264,7 @@ def cancelar_pedido(pedido_id: int, background_tasks: BackgroundTasks, db: Sessi
                 detail="Solo se pueden cancelar pedidos pendientes"
             )
         
-        # Cancelar pedido
+        # Cancelar pedido - Asegurarse de usar el enum correctamente
         pedido.estado = EstadoPedido.CANCELADO
         
         # Enviar correo de cancelación
