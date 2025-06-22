@@ -13,9 +13,52 @@ from app.models.categoria import CategoriaModel  # Añade esta importación al i
 
 router = APIRouter() # Crea un router para los endpoints relacionados con productos.
 
-# Nuevo endpoint específico para crear productos - eliminamos el requisito de autenticación
+# Endpoint modificado para aceptar ProductoCrear directamente
 @router.post("/crear", response_model=ProductoMostrar, status_code=201)
-def crear_producto_endpoint(producto_pedido: ProductoPedidoCrear, db: Session = Depends(get_db)):
+def crear_producto_endpoint(producto: ProductoCrear, db: Session = Depends(get_db)):
+    """
+    Endpoint para crear un nuevo producto.
+    Recibe información del producto incluyendo nombre, descripción, precio, disponibilidad y categoría.
+    """
+    # Buscar o crear la categoría
+    categoria = None
+    if producto.categoria:
+        # Buscar si la categoría ya existe
+        categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == producto.categoria).first()
+        
+        # Si no existe, crearla
+        if not categoria:
+            categoria = CategoriaModel(nombre=producto.categoria)
+            db.add(categoria)
+            db.commit()
+            db.refresh(categoria)
+    else:
+        # Si no se proporciona categoría, usar una por defecto
+        categoria = db.query(CategoriaModel).first()
+        if not categoria:
+            categoria = CategoriaModel(nombre="General")
+            db.add(categoria)
+            db.commit()
+            db.refresh(categoria)
+    
+    # Crear nuevo producto
+    nuevo_producto = Producto(
+        nombre=producto.nombre,
+        descripcion=producto.descripcion,
+        precio=producto.precio,
+        disponibilidad=producto.disponibilidad if producto.disponibilidad is not None else True,
+        categoria_id=categoria.id
+    )
+    
+    db.add(nuevo_producto)
+    db.commit()
+    db.refresh(nuevo_producto)
+    
+    return nuevo_producto
+
+# Mantener el endpoint original para compatibilidad con el formato anterior
+@router.post("/crear_pedido", response_model=ProductoMostrar, status_code=201)
+def crear_producto_pedido(producto_pedido: ProductoPedidoCrear, db: Session = Depends(get_db)):
     """
     Endpoint específico para crear un nuevo producto basado en un pedido.
     Recibe información de usuario, productos y total.

@@ -9,6 +9,7 @@ from app.models.pedido import PedidoModel, EstadoPedido
 from app.models.detalle_pedido import DetallePedidoModel
 from app.models.producto import Producto
 from app.models.usuario import UsuarioModel
+from app.models.categoria import CategoriaModel
 from app.schemas.pedido import PedidoCrear, PedidoMostrar, EstadisticasPedidos, PedidoConfirmar, DetallePedidoMostrar
 # Comentamos las importaciones de autenticación que no vamos a usar
 # from app.core.security import get_current_active_user, get_current_admin_user
@@ -20,7 +21,7 @@ router = APIRouter()
 def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     """
     Registra un nuevo pedido en el sistema como pendiente.
-    Ya no requiere autenticación.
+    Acepta directamente los datos del producto (nombre, precio, categoría, etc.)
     """
     # Generar número de pedido único
     import random
@@ -44,30 +45,48 @@ def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Ses
         db.add(usuario)
         db.flush()  # Esto asigna un ID al usuario sin hacer commit
     
+    # Buscar o crear la categoría
+    categoria = None
+    if pedido.categoria:
+        categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == pedido.categoria).first()
+        if not categoria:
+            categoria = CategoriaModel(nombre=pedido.categoria)
+            db.add(categoria)
+            db.flush()
+    else:
+        # Si no se proporciona categoría, usar una por defecto
+        categoria = db.query(CategoriaModel).first()
+        if not categoria:
+            categoria = CategoriaModel(nombre="General")
+            db.add(categoria)
+            db.flush()
+    
+    # Buscar si el producto ya existe o crear uno nuevo
+    producto = db.query(Producto).filter(
+        Producto.nombre == pedido.nombre,
+        Producto.precio == pedido.precio
+    ).first()
+    
+    if not producto:
+        # Crear el producto
+        producto = Producto(
+            nombre=pedido.nombre,
+            descripcion=pedido.descripcion,
+            precio=pedido.precio,
+            disponibilidad=pedido.disponibilidad if pedido.disponibilidad is not None else True,
+            categoria_id=categoria.id
+        )
+        db.add(producto)
+        db.flush()
+    
     # Calcular monto total
-    monto_total = 0
-    for detalle in pedido.detalles:
-        # Verificar que el producto existe
-        producto = db.query(Producto).filter(Producto.id == detalle.producto_id).first()
-        if not producto:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Producto con ID {detalle.producto_id} no encontrado"
-            )
-        
-        # Verificar disponibilidad si es necesario
-        if hasattr(producto, 'disponibilidad') and not producto.disponibilidad:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"El producto {producto.nombre} no está disponible"
-            )
-        
-        monto_total += detalle.cantidad * detalle.precio_unitario
+    cantidad = pedido.cantidad or 1
+    monto_total = pedido.precio * cantidad
     
     # Crear el pedido
     nuevo_pedido = PedidoModel(
         n_pedido=n_pedido,
-        usuario_id=usuario.id,  # Usamos el ID del usuario existente o del recién creado
+        usuario_id=usuario.id,
         monto_total=monto_total,
         estado=EstadoPedido.PENDIENTE,
         correo_enviado=False
@@ -77,15 +96,14 @@ def crear_pedido(pedido: PedidoCrear, background_tasks: BackgroundTasks, db: Ses
     db.commit()
     db.refresh(nuevo_pedido)
     
-    # Crear los detalles del pedido
-    for detalle in pedido.detalles:
-        nuevo_detalle = DetallePedidoModel(
-            pedido_id=nuevo_pedido.id,
-            producto_id=detalle.producto_id,
-            cantidad=detalle.cantidad,
-            precio_unitario=detalle.precio_unitario
-        )
-        db.add(nuevo_detalle)
+    # Crear el detalle del pedido
+    nuevo_detalle = DetallePedidoModel(
+        pedido_id=nuevo_pedido.id,
+        producto_id=producto.id,
+        cantidad=cantidad,
+        precio_unitario=pedido.precio
+    )
+    db.add(nuevo_detalle)
     
     db.commit()
     db.refresh(nuevo_pedido)

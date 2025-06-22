@@ -28,8 +28,18 @@ class PedidoBase(BaseModel):
     n_pedido: str
     usuario_id: int
 
-class PedidoCrear(PedidoBase):
-    detalles: List[DetallePedidoCrear]
+# Simplificamos PedidoCrear para usar principalmente la estructura de datos del producto
+class PedidoCrear(BaseModel):
+    # Datos del producto (estructura principal)
+    categoria: Optional[str] = None
+    descripcion: Optional[str] = None
+    disponibilidad: Optional[bool] = True
+    nombre: str
+    precio: float
+    cantidad: Optional[int] = 1  # Por defecto 1 unidad
+    
+    # Campo opcional para asociar con un usuario existente
+    usuario_id: Optional[int] = None
 
 class PedidoMostrar(PedidoBase):
     id: int

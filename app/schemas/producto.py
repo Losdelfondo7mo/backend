@@ -12,7 +12,7 @@ class ProductoBase(BaseModel):
     categoria_id: Optional[int] = None  # Campo opcional
 
 class ProductoCrear(ProductoBase):
-    pass
+    categoria: str  # Nuevo campo para recibir el nombre de la categoría
 
 class ProductoMostrar(ProductoBase):
     id: int
