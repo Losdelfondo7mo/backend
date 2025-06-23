@@ -156,6 +156,8 @@ async def oauth_callback(
     db: Session = Depends(get_db)
 ):
     """Manejar callback OAuth y autenticar/crear usuario"""
+    import logging
+    logging.info(f"OAuth callback recibido: provider={provider}, code={code[:10]}...")
     try:
         # Intercambiar código por token
         token_data = await oauth_service.exchange_code_for_token(provider, code)
@@ -214,8 +216,9 @@ async def oauth_callback(
         return RedirectResponse(url=redirect_url)
         
     except Exception as e:
+        logging.error(f"Error en OAuth callback: {str(e)}")
         # Redireccionar a la página de error en el frontend
-        return RedirectResponse(url="https://los-del-fondo-7mo.web.app/error-login")
+        return RedirectResponse(url=f"https://los-del-fondo-7mo.web.app/error-login?error={str(e)}")
 
 
 @router.post("/perfil", response_model=TokenWithUserData)
