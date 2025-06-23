@@ -188,13 +188,15 @@ async def oauth_callback(
             else:
                 # Crear nuevo usuario
                 new_user = UsuarioModel(
-                    nombre_usuario=user_info['name'],
+                    nombre=user_info['name'],  # Cambiado de nombre_usuario a nombre
+                    apellido="",  # Añadido campo requerido
+                    usuario=user_info['email'].split('@')[0],  # Generando un nombre de usuario a partir del email
                     email=user_info['email'],
                     oauth_provider=provider,
                     oauth_id=user_info['id'],
                     avatar_url=user_info.get('avatar_url'),
-                    es_activo=True,
-                    es_admin=False
+                    is_active=True,  # Cambiado de es_activo a is_active
+                    rol="usuario"  # Añadido rol en lugar de es_admin
                 )
                 db.add(new_user)
                 db.commit()
