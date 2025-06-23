@@ -143,9 +143,9 @@ def confirmar_pedido(pedido_id: int, confirmacion: PedidoConfirmar, background_t
         if usuario and usuario.email:
             background_tasks.add_task(
                 send_email_smtp,
-                email_to=usuario.email,
+                recipients=[usuario.email],  # Cambio: email_to → recipients como lista
                 subject="Pedido Confirmado",
-                html_content=f"<p>Su pedido #{pedido.n_pedido} ha sido confirmado.</p>"
+                body_html=f"<p>Su pedido #{pedido.n_pedido} ha sido confirmado.</p>"  # Cambio: html_content → body_html
             )
             pedido.correo_enviado = True
     else:
@@ -157,9 +157,9 @@ def confirmar_pedido(pedido_id: int, confirmacion: PedidoConfirmar, background_t
         if usuario and usuario.email:
             background_tasks.add_task(
                 send_email_smtp,
-                email_to=usuario.email,
+                recipients=[usuario.email],  # Cambio: email_to → recipients como lista
                 subject="Pedido Denegado",
-                html_content=f"<p>Lo sentimos, su pedido #{pedido.n_pedido} ha sido denegado.</p>"
+                body_html=f"<p>Lo sentimos, su pedido #{pedido.n_pedido} ha sido denegado.</p>"  # Cambio: html_content → body_html
             )
             pedido.correo_enviado = True
     
