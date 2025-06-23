@@ -143,9 +143,9 @@ def confirmar_pedido(pedido_id: int, confirmacion: PedidoConfirmar, background_t
         if usuario and usuario.email:
             background_tasks.add_task(
                 send_email_smtp,
-                recipients=[usuario.email],  # Cambio: email_to → recipients como lista
+                recipients=[usuario.email],  # Changed from email_to to recipients as a list
                 subject="Pedido Confirmado",
-                body_html=f"<p>Su pedido #{pedido.n_pedido} ha sido confirmado.</p>"  # Cambio: html_content → body_html
+                body_html=f"<p>Su pedido #{pedido.n_pedido} ha sido confirmado.</p>"  # Changed from html_content to body_html
             )
             pedido.correo_enviado = True
     else:
@@ -157,9 +157,9 @@ def confirmar_pedido(pedido_id: int, confirmacion: PedidoConfirmar, background_t
         if usuario and usuario.email:
             background_tasks.add_task(
                 send_email_smtp,
-                recipients=[usuario.email],  # Cambio: email_to → recipients como lista
+                recipients=[usuario.email],  # Changed from email_to to recipients as a list
                 subject="Pedido Denegado",
-                body_html=f"<p>Lo sentimos, su pedido #{pedido.n_pedido} ha sido denegado.</p>"  # Cambio: html_content → body_html
+                body_html=f"<p>Lo sentimos, su pedido #{pedido.n_pedido} ha sido denegado.</p>"  # Changed from html_content to body_html
             )
             pedido.correo_enviado = True
     
@@ -278,9 +278,9 @@ def cancelar_pedido(pedido_id: int, background_tasks: BackgroundTasks, db: Sessi
         if usuario and usuario.email:
             background_tasks.add_task(
                 send_email_smtp,
-                email_to=usuario.email,
+                recipients=[usuario.email],  # Cambio: email_to → recipients como lista
                 subject="Pedido Cancelado",
-                html_content=f"<p>Su pedido #{pedido.n_pedido} ha sido cancelado.</p>"
+                body_html=f"<p>Su pedido #{pedido.n_pedido} ha sido cancelado.</p>"  # Cambio: html_content → body_html
             )
         
         # Hacer commit de los cambios

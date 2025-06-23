@@ -211,7 +211,7 @@ async def oauth_callback(
             is_new_user = False
         
         # Crear token JWT
-        jwt_token = create_access_token(data={"sub": existing_user.nombre_usuario})
+        jwt_token = create_access_token(data={"sub": existing_user.usuario})
         
         # Redireccionar al frontend con el token como parámetro
         redirect_url = f"https://los-del-fondo-7mo.web.app/productos?token={jwt_token}"
