@@ -201,6 +201,8 @@ def actualizar_producto(producto_id: int, producto_actualizado: ProductoCrear, d
     
     # Manejar el campo categoria especialmente
     datos_actualizados = producto_actualizado.model_dump()
+    
+    # Primero, verificamos si hay una categoría por nombre
     if 'categoria' in datos_actualizados and datos_actualizados['categoria']:
         from app.models.categoria import CategoriaModel
         
@@ -214,25 +216,38 @@ def actualizar_producto(producto_id: int, producto_actualizado: ProductoCrear, d
         # Asignar el ID de la categoría al producto
         producto.categoria_id = categoria.id
         
-        # Eliminar el campo categoria para que no intente asignarlo directamente
-        del datos_actualizados['categoria']
+        # Eliminar ambos campos para que no intente asignarlos directamente
+        if 'categoria' in datos_actualizados:
+            del datos_actualizados['categoria']
+        if 'categoria_id' in datos_actualizados:
+            del datos_actualizados['categoria_id']
     
-    # Verificar que categoria_id sea válido si está presente
-    if 'categoria_id' in datos_actualizados and datos_actualizados['categoria_id'] is not None:
-        # Verificar si la categoría existe
-        categoria_existe = db.query(CategoriaModel).filter(
-            CategoriaModel.id == datos_actualizados['categoria_id']
-        ).first()
+    # Si no hay categoría por nombre pero sí hay categoria_id
+    elif 'categoria_id' in datos_actualizados:
+        from app.models.categoria import CategoriaModel
         
-        if not categoria_existe:
-            # Si la categoría no existe, usar una categoría por defecto o crear una nueva
-            categoria_default = db.query(CategoriaModel).first()
-            if not categoria_default:
-                categoria_default = CategoriaModel(nombre="General")
-                db.add(categoria_default)
+        # Si es None o 0, usar la categoría General
+        if datos_actualizados['categoria_id'] is None or datos_actualizados['categoria_id'] == 0:
+            categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == "General").first()
+            if not categoria:
+                categoria = CategoriaModel(nombre="General")
+                db.add(categoria)
                 db.flush()
-            
-            datos_actualizados['categoria_id'] = categoria_default.id
+            producto.categoria_id = categoria.id
+        else:
+            # Verificar que la categoría existe
+            categoria = db.query(CategoriaModel).filter(CategoriaModel.id == datos_actualizados['categoria_id']).first()
+            if not categoria:
+                # Si no existe, usar la categoría General
+                categoria = db.query(CategoriaModel).filter(CategoriaModel.nombre == "General").first()
+                if not categoria:
+                    categoria = CategoriaModel(nombre="General")
+                    db.add(categoria)
+                    db.flush()
+                producto.categoria_id = categoria.id
+        
+        # Eliminar categoria_id para que no intente asignarlo nuevamente
+        del datos_actualizados['categoria_id']
     
     # Actualizar los demás campos
     for key, value in datos_actualizados.items():
