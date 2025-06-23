@@ -15,6 +15,7 @@ from app.schemas.usuario import UsuarioLogin, UsuarioCrear, UsuarioPublic
 from app.config.settings import settings
 from typing import List
 import secrets
+from fastapi.responses import RedirectResponse
 
 router = APIRouter()
 @router.post("/crear", status_code=201, response_model=UsuarioPublic)
@@ -147,16 +148,17 @@ async def oauth_login(provider: str):
             detail=str(e)
         )
 
-@router.post("/oauth/{provider}/callback", response_model=OAuthLoginResponse)
+@router.get("/oauth/{provider}/callback", response_class=RedirectResponse)
 async def oauth_callback(
     provider: str,
-    callback_data: OAuthCallback,
+    code: str,
+    state: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Manejar callback OAuth y autenticar/crear usuario"""
     try:
         # Intercambiar código por token
-        token_data = await oauth_service.exchange_code_for_token(provider, callback_data.code)
+        token_data = await oauth_service.exchange_code_for_token(provider, code)
         access_token = token_data['access_token']
         
         # Obtener información del usuario
@@ -207,19 +209,13 @@ async def oauth_callback(
         # Crear token JWT
         jwt_token = create_access_token(data={"sub": existing_user.nombre_usuario})
         
-        return OAuthLoginResponse(
-            access_token=jwt_token,
-            user_id=existing_user.id,
-            username=existing_user.nombre_usuario,
-            email=existing_user.email,
-            is_new_user=is_new_user
-        )
+        # Redireccionar al frontend con el token como parámetro
+        redirect_url = f"https://los-del-fondo-7mo.web.app/productos?token={jwt_token}"
+        return RedirectResponse(url=redirect_url)
         
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error en autenticación OAuth: {str(e)}"
-        )
+        # Redireccionar a la página de error en el frontend
+        return RedirectResponse(url="https://los-del-fondo-7mo.web.app/error-login")
 
 
 @router.post("/perfil", response_model=TokenWithUserData)
