@@ -253,11 +253,11 @@ def actualizar_producto(producto_id: int, producto_actualizado: ProductoCrear, d
         "categoria": producto.categoria.nombre if producto.categoria else None
     }
 
-@router.delete("/{producto_id}", status_code=204) # HTTP 204 indica éxito sin contenido de respuesta.
+@router.delete("/{producto_id}", status_code=204)
 def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
     """
-    Elimina un producto de la base de datos utilizando su ID.
-    Ya no requiere autenticación.
+    Elimina un producto por su ID.
+    Ya no requiere autenticación de administrador.
 
     Parámetros:
         producto_id (int): El ID del producto a eliminar.
@@ -265,11 +265,25 @@ def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
 
     Excepciones:
         HTTPException (404): Si el producto no se encuentra.
+        HTTPException (400): Si el producto está asociado a pedidos existentes.
     """
+    # Buscar el producto
     producto = db.query(Producto).filter(Producto.id == producto_id).first()
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     
+    # Verificar si el producto está siendo utilizado en algún pedido
+    from app.models.detalle_pedido import DetallePedidoModel
+    detalles = db.query(DetallePedidoModel).filter(DetallePedidoModel.producto_id == producto_id).all()
+    
+    if detalles:
+        # El producto está siendo utilizado en pedidos, no se puede eliminar
+        raise HTTPException(
+            status_code=400,
+            detail="No se puede eliminar el producto porque está asociado a pedidos existentes"
+        )
+    
+    # Si no hay detalles asociados, proceder con la eliminación
     db.delete(producto) # Elimina el producto de la sesión.
     db.commit() # Confirma la eliminación en la base de datos.
     return # No se devuelve contenido con el código de estado 204.
