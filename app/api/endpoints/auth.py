@@ -179,24 +179,30 @@ async def oauth_callback(
             ).first()
             
             if existing_user:
-                # Actualizar usuario existente con información OAuth
-                existing_user.oauth_provider = provider
-                existing_user.oauth_id = user_info['id']
-                existing_user.avatar_url = user_info.get('avatar_url')
-                db.commit()
-                is_new_user = False
+                # Si existe usuario con el mismo email pero sin OAuth
+                if not existing_user.oauth_provider:
+                    # Redirigir a página de vinculación
+                    redirect_url = f"https://los-del-fondo-7mo.web.app/auth/link-account?email={user_info['email']}&provider={provider}"
+                    return RedirectResponse(url=redirect_url)
+                else:
+                    # Actualizar información OAuth
+                    existing_user.oauth_provider = provider
+                    existing_user.oauth_id = user_info['id']
+                    existing_user.avatar_url = user_info.get('avatar_url')
+                    db.commit()
+                    is_new_user = False
             else:
                 # Crear nuevo usuario
                 new_user = UsuarioModel(
-                    nombre=user_info['name'],  # Cambiado de nombre_usuario a nombre
-                    apellido="",  # Añadido campo requerido
-                    usuario=user_info['email'].split('@')[0],  # Generando un nombre de usuario a partir del email
+                    nombre=user_info['name'],
+                    apellido="",
+                    usuario=user_info['email'].split('@')[0],
                     email=user_info['email'],
                     oauth_provider=provider,
                     oauth_id=user_info['id'],
                     avatar_url=user_info.get('avatar_url'),
-                    is_active=True,  # Cambiado de es_activo a is_active
-                    rol="usuario"  # Añadido rol en lugar de es_admin
+                    is_active=True,
+                    rol="usuario"
                 )
                 db.add(new_user)
                 db.commit()
@@ -253,4 +259,70 @@ async def login_with_user_data(login_data: UsuarioLogin, db: Session = Depends(g
         "apellido": usuario_db.apellido,
         "id": usuario_db.id
     }
+
+@router.get("/me", response_model=UsuarioMostrar)
+async def get_current_user_info(current_user: UsuarioModel = Depends(get_current_user)):
+    """Obtener información del usuario actual autenticado"""
+    return current_user
+
+
+@router.post("/link-oauth")
+async def link_oauth_account(
+    link_data: dict,
+    current_user: UsuarioModel = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Vincular cuenta OAuth con cuenta existente"""
+    try:
+        provider = link_data.get('provider')
+        if not provider:
+            raise HTTPException(status_code=400, detail="Provider requerido")
+        
+        # Actualizar usuario con información OAuth
+        current_user.oauth_provider = provider
+        # Nota: oauth_id se actualizará en el próximo login OAuth
+        db.commit()
+        
+        return {"message": "Cuenta vinculada exitosamente"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al vincular cuenta: {str(e)}")
+
+
+@router.post("/create-password-oauth")
+async def create_password_oauth(
+    password_data: dict,
+    db: Session = Depends(get_db)
+):
+    """Crear contraseña para usuario OAuth existente"""
+    try:
+        email = password_data.get('email')
+        password = password_data.get('password')
+        provider = password_data.get('provider')
+        
+        if not all([email, password, provider]):
+            raise HTTPException(status_code=400, detail="Email, password y provider requeridos")
+        
+        # Buscar usuario por email
+        user = db.query(UsuarioModel).filter(UsuarioModel.email == email).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        # Actualizar contraseña
+        user.contraseña = get_password_hash(password)
+        user.oauth_provider = provider
+        db.commit()
+        
+        # Crear token JWT
+        jwt_token = create_access_token(data={"sub": user.usuario})
+        
+        return {
+            "access_token": jwt_token,
+            "token_type": "bearer",
+            "message": "Contraseña creada exitosamente"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al crear contraseña: {str(e)}")
+# Agregar estas importaciones si no están presentes
+from app.core.security import get_password_hash
+from app.schemas.usuario import UsuarioMostrar
 
