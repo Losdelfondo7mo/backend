@@ -451,30 +451,59 @@ async def crear_preferencia_pago(pedido_id: int, request: Request, db: Session =
         })
     
     # Get the base URL for callbacks
+    # Reemplazar esto
     base_url = str(request.base_url).rstrip('/')
     
-    # Create preference data
+    # Por esto
+    base_url_api = str(request.base_url).rstrip('/')  # Para la API/webhook
+    base_url_frontend = "https://los-del-fondo-7mo.web.app"  # Tu URL de Firebase
+    
+    # Y luego modificar la configuración
     preference_data = {
         "items": items,
         "external_reference": str(pedido.n_pedido),
         "back_urls": {
-            "success": f"{base_url}/api/pedidos/pago-exitoso/{pedido_id}",
-            "failure": f"{base_url}/api/pedidos/pago-fallido/{pedido_id}",
-            "pending": f"{base_url}/api/pedidos/pago-pendiente/{pedido_id}"
+            "success": f"{base_url_frontend}/pago-exitoso/{pedido_id}",
+            "failure": f"{base_url_frontend}/pago-fallido/{pedido_id}",
+            "pending": f"{base_url_frontend}/pago-pendiente/{pedido_id}"
         },
-        "notification_url": f"{base_url}/api/pedidos/webhook",
+        "notification_url": f"{base_url_api}/api/pedidos/webhook",
         "auto_return": "approved"
     }
     
     # Create the preference
-    preference_response = sdk.preference().create(preference_data)
-    preference = preference_response["response"]
-    
-    return {
-        "id": preference["id"],
-        "init_point": preference["init_point"],
-        "sandbox_init_point": preference["sandbox_init_point"]
-    }
+    try:
+        preference_response = sdk.preference().create(preference_data)
+        print(f"Preference response: {preference_response}")
+        
+        if "response" not in preference_response:
+            print(f"Error: 'response' key not found in preference_response: {preference_response}")
+            raise HTTPException(status_code=500, detail="Error creating Mercado Pago preference: Invalid response format")
+        
+        preference = preference_response["response"]
+        print(f"Preference data: {preference}")
+        
+        # Check if required keys exist
+        if "id" not in preference:
+            print(f"Error: 'id' key not found in preference: {preference}")
+            raise HTTPException(status_code=500, detail="Error creating Mercado Pago preference: Missing ID")
+        
+        if "init_point" not in preference:
+            print(f"Error: 'init_point' key not found in preference: {preference}")
+            raise HTTPException(status_code=500, detail="Error creating Mercado Pago preference: Missing init_point")
+        
+        if "sandbox_init_point" not in preference:
+            print(f"Error: 'sandbox_init_point' key not found in preference: {preference}")
+            raise HTTPException(status_code=500, detail="Error creating Mercado Pago preference: Missing sandbox_init_point")
+        
+        return {
+            "id": preference["id"],
+            "init_point": preference["init_point"],
+            "sandbox_init_point": preference["sandbox_init_point"]
+        }
+    except Exception as e:
+        print(f"Error creating Mercado Pago preference: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating Mercado Pago preference: {str(e)}")
 
 @router.post("/webhook")
 async def webhook_notification(request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
