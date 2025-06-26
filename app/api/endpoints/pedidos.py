@@ -446,7 +446,7 @@ async def crear_preferencia_pago(pedido_id: int, request: Request, db: Session =
             "title": producto.nombre,
             "description": producto.descripcion if hasattr(producto, 'descripcion') else "",
             "quantity": detalle.cantidad,
-            "currency_id": "MXN",  # Change according to your currency
+            "currency_id": "ARS",  
             "unit_price": float(detalle.precio_unitario)
         })
     
