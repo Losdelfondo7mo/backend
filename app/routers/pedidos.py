@@ -1,5 +1,4 @@
-# ... existing code ...
-
+import os
 import mercadopago
 from fastapi import BackgroundTasks, APIRouter, Depends, HTTPException, status, Request
 from models.models import PedidoModel, DetallePedidoModel, Producto
