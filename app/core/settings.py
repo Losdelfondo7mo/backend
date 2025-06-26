@@ -1,0 +1,3 @@
+# ... existing code ...
+
+MERCADOPAGO_ACCESS_TOKEN = os.getenv("MERCADOPAGO_ACCESS_TOKEN")
