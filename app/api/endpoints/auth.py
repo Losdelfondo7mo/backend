@@ -16,6 +16,8 @@ from app.config.settings import settings
 from typing import List
 import secrets
 from fastapi.responses import RedirectResponse
+from app.core.security import obtener_contraseña_hash
+from app.schemas.usuario import UsuarioMostrar
 
 router = APIRouter()
 @router.post("/crear", status_code=201, response_model=UsuarioPublic)
@@ -308,7 +310,7 @@ async def create_password_oauth(
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         
         # Actualizar contraseña
-        user.contraseña = get_password_hash(password)
+        user.contraseña = obtener_contraseña_hash(password)
         user.oauth_provider = provider
         db.commit()
         
