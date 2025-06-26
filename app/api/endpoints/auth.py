@@ -11,7 +11,7 @@ from app.services.oauth_service import oauth_service
 from app.services.email_service import send_email_smtp
 from app.schemas.oauth import OAuthCallback, OAuthLoginResponse, OAuthProvider
 from app.schemas.token import Token, TokenWithUserData
-from app.schemas.usuario import UsuarioLogin, UsuarioCrear, UsuarioPublic, UsuarioMostrar
+from app.schemas.usuario import UsuarioLogin, UsuarioCrear, UsuarioPublic
 from app.config.settings import settings
 from typing import List
 import secrets

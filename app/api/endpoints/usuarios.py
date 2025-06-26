@@ -28,8 +28,8 @@ async def verificar_usuario(usuario: str, db: Session = Depends(get_db)):
         
     return usuario_existente
 
-@router.put("/cambiar-contraseña/{usuario_id}", status_code=200)
-async def cambiar_contraseña(usuario_id: int, datos: CambiarContraseña, db: Session = Depends(get_db)):
+@router.put("/cambiar-password/{usuario_id}", status_code=200)
+async def cambiar_password(usuario_id: int, datos: CambiarContraseña, db: Session = Depends(get_db)):
     """
     Endpoint para cambiar la contraseña de un usuario.
     """
