@@ -405,3 +405,12 @@ def editar_pedido(pedido_id: int, pedido_actualizado: PedidoEditar, db: Session 
     db.refresh(pedido)
     
     return pedido
+
+@router.get("/todos", response_model=List[PedidoMostrar])
+def listar_todos_pedidos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    """
+    Lista todos los pedidos (pendientes, aprobados y cancelados).
+    Para uso del panel de administración.
+    """
+    pedidos = db.query(PedidoModel).offset(skip).limit(limit).all()
+    return pedidos
