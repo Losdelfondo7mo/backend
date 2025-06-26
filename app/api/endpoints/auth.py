@@ -260,7 +260,7 @@ async def login_with_user_data(login_data: UsuarioLogin, db: Session = Depends(g
         "id": usuario_db.id
     }
 
-@router.get("/me", response_model=UsuarioMostrar)
+@router.get("/me", response_model=UsuarioPublic)
 async def get_current_user_info(current_user: UsuarioModel = Depends(get_current_user)):
     """Obtener información del usuario actual autenticado"""
     return current_user
