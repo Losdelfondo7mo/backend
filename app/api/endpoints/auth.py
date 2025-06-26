@@ -6,7 +6,7 @@ from typing import Optional, Dict, Any
 from pydantic import ValidationError
 from app.db.session import get_db
 from app.models.usuario import UsuarioModel
-from app.core.security import verificar_contraseña, create_access_token, obtener_contraseña_hash
+from app.core.security import verificar_contraseña, create_access_token, obtener_contraseña_hash, get_current_user
 from app.services.oauth_service import oauth_service
 from app.services.email_service import send_email_smtp
 from app.schemas.oauth import OAuthCallback, OAuthLoginResponse, OAuthProvider
@@ -322,7 +322,6 @@ async def create_password_oauth(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al crear contraseña: {str(e)}")
-# Agregar estas importaciones si no están presentes
 from app.core.security import get_password_hash
 from app.schemas.usuario import UsuarioMostrar
 
