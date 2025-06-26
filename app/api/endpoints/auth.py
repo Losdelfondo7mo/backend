@@ -17,7 +17,7 @@ from typing import List
 import secrets
 from fastapi.responses import RedirectResponse
 from app.core.security import obtener_contraseña_hash
-from app.schemas.usuario import UsuarioMostrar
+
 
 router = APIRouter()
 @router.post("/crear", status_code=201, response_model=UsuarioPublic)
