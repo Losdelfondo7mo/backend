@@ -1,3 +1,4 @@
+DATABASE_URL = "postgresql://losdelfondosq_user:2Ca6S0Bwous385nwX9F60Ftb5CKprwzm@dpg-d1q5ack9c44c73982rmg-a.oregon-postgres.render.com/losdelfondosq"
 APP_PASSWORD = 'ykhj uzeu yztv pmfe'
 
 # Nueva URL de base de datos de Render
