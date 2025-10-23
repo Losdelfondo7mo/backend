@@ -1,4 +1,6 @@
 # API Olimpiadas
+!!!!! Debido a la naturaleza del servicio gratuito de Render todos los meses la base de datos es borrada y debido a eso es necesario a actualizar el codigo del backend para adaptarse a este cambio,debido a esto esperamos su comprensión !!!!!
+
 ## Descripción
 API Olimpiadas es un backend desarrollado con FastAPI para gestionar productos, usuarios, ventas y autenticación. El proyecto implementa un sistema completo de CRUD (Crear, Leer, Actualizar, Eliminar) para productos y usuarios, con autenticación JWT y soporte para OAuth con varios proveedores (Google, GitHub, Discord).
 
