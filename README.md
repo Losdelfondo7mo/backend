@@ -38,6 +38,7 @@ API Olimpiadas es un backend desarrollado con FastAPI para gestionar productos, 
 - Passlib : Hashing seguro de contraseñas
 - OAuth : Autenticación con proveedores externos
 - ## Estructura del Proyecto
+<pre>
 backend/
 ├── app/
 │   ├── api/
@@ -71,6 +72,7 @@ backend/
 ├── main.py                   # Punto de entrada de la aplicación
 ├── requirements.txt          # Dependencias del proyecto
 └── reset_db.py               # Script para resetear la base de datos
+</pre>
 ## Requisitos
 - Python 3.8+
 - PostgreSQL
